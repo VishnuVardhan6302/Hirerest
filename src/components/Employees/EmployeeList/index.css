@@ -1,166 +1,294 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+  overflow-y: auto;
+}
+
+body {
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
 /* =========================================
-   EMPLOYEE LAYOUT
+   MAIN LAYOUT
 ========================================= */
 
 .employee-layout {
   min-height: 100vh;
+  width: 100%;
   display: flex;
-  background: #f5f7f5;
-  color: #1e3029;
+  background: #f4f8f7;
+  color: #17201e;
 }
 
 /* =========================================
-   SIDEBAR
+   SIDEBAR - SAME AS DASHBOARD
 ========================================= */
 
-.employee-sidebar {
-  width: 220px;
-  min-width: 220px;
+.sidebar {
+  width: 192px;
+  min-width: 192px;
   min-height: 100vh;
-  background: #ffffff;
-  border-right: 1px solid #e6ebe8;
+  height: 100vh;
+
+  padding: 16px 12px;
+
   display: flex;
   flex-direction: column;
+
+  background: linear-gradient(
+    180deg,
+    #005a46 0%,
+    #004d3d 50%,
+    #003f33 100%
+  );
+
+  color: #ffffff;
+
   position: sticky;
   top: 0;
-  height: 100vh;
+
   box-sizing: border-box;
-  padding: 20px 14px;
 }
 
-/* Brand */
+/* =========================================
+   BRAND
+========================================= */
 
-.sidebar-brand {
-  height: 48px;
+.brand {
+  height: 54px;
+
   display: flex;
   align-items: center;
+
   gap: 10px;
-  padding: 0 10px;
-  margin-bottom: 25px;
+
+  padding: 0 4px;
+  margin-bottom: 14px;
 }
 
-.brand-mark {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  background: #064e3b;
-  color: #f4ede4;
+.brand-logo {
+  width: 37px;
+  height: 37px;
+
+  flex-shrink: 0;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+
+  border-radius: 10px;
+
+  background: #ffffff;
+  color: #00634d;
+
+  font-size: 23px;
   font-weight: 800;
 }
 
-.sidebar-brand span {
-  color: #16352c;
-  font-size: 19px;
+.brand-text h2 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: 17px;
+  line-height: 18px;
+
   font-weight: 750;
 }
 
-/* Sidebar */
+.brand-text span {
+  display: block;
 
-.sidebar-section {
-  flex: 1;
-}
+  margin-top: 3px;
 
-.sidebar-label {
-  margin: 0 10px 9px;
-  color: #9aa49f;
-  font-size: 11px;
+  color: #ffffff;
+
+  font-size: 6.5px;
+
+  letter-spacing: 1.05px;
+
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.7px;
+
+  opacity: 0.82;
 }
+
+/* =========================================
+   NAVIGATION
+========================================= */
 
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
-.sidebar-item {
+.nav-item {
+  position: relative;
+
   width: 100%;
-  height: 42px;
-  border: none;
-  background: transparent;
+  height: 38px;
+
+  border: 0;
   border-radius: 8px;
-  padding: 0 11px;
+
+  background: transparent;
+
+  color: rgba(255, 255, 255, 0.82);
+
   display: flex;
   align-items: center;
-  gap: 11px;
-  color: #66736d;
+
+  gap: 12px;
+
+  padding: 0 13px;
+
   font-size: 13px;
-  font-weight: 550;
-  cursor: pointer;
+  font-weight: 500;
+
   text-align: left;
-  transition: all 0.2s ease;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
-.sidebar-item svg {
+.nav-item svg {
   flex-shrink: 0;
 }
 
-.sidebar-item:hover {
-  background: #f0f6f3;
-  color: #064e3b;
-}
-
-.sidebar-item.active {
-  background: #e6f2ed;
-  color: #064e3b;
-  font-weight: 700;
-}
-
-.sidebar-arrow {
-  margin-left: auto;
-}
-
-.sidebar-bottom {
-  border-top: 1px solid #edf0ee;
-  padding-top: 13px;
-  margin-top: 15px;
-}
-
-/* User */
-
-.sidebar-user {
-  margin-top: 15px;
-  padding: 12px 9px;
-  border-top: 1px solid #edf0ee;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.user-avatar,
-.profile-avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #064e3b;
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.09);
   color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
+
+  transform: translateX(2px);
+}
+
+.nav-item.active {
+  background: linear-gradient(
+    90deg,
+    #159a74,
+    #148966
+  );
+
+  color: #ffffff;
+
+  box-shadow: inset 3px 0 #b9ead7;
+}
+
+/* =========================================
+   SIDEBAR BOTTOM CARD
+========================================= */
+
+.sidebar-bottom-card {
+  position: relative;
+
+  min-height: 112px;
+
+  margin-top: auto;
+
+  padding: 16px 12px;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.sidebar-bottom-card h3 {
+  position: relative;
+  z-index: 2;
+
+  max-width: 115px;
+
+  margin: 0 0 7px;
+
+  color: #ffffff;
+
+  font-size: 14px;
+
+  line-height: 17px;
+
   font-weight: 700;
 }
 
-.user-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.sidebar-bottom-card p {
+  position: relative;
+  z-index: 2;
+
+  max-width: 125px;
+
+  margin: 0;
+
+  color: rgba(255, 255, 255, 0.67);
+
+  font-size: 9px;
+
+  line-height: 13px;
 }
 
-.user-info strong {
-  color: #26372f;
-  font-size: 12px;
+/* =========================================
+   PLANT
+========================================= */
+
+.plant-decoration {
+  position: absolute;
+
+  right: -8px;
+  bottom: -2px;
+
+  width: 58px;
+  height: 74px;
+
+  opacity: 0.8;
 }
 
-.user-info span {
-  color: #8a958f;
-  font-size: 11px;
+.plant-decoration span {
+  position: absolute;
+
+  width: 23px;
+  height: 40px;
+
+  border-radius: 100% 0 100% 0;
+
+  background: #24a779;
+
+  transform: rotate(-25deg);
+}
+
+.plant-decoration span:nth-child(1) {
+  left: 27px;
+  top: 0;
+}
+
+.plant-decoration span:nth-child(2) {
+  left: 9px;
+  top: 12px;
+
+  transform: rotate(-65deg);
+}
+
+.plant-decoration span:nth-child(3) {
+  left: 28px;
+  top: 28px;
+
+  transform: rotate(15deg);
 }
 
 /* =========================================
@@ -170,6 +298,16 @@
 .employee-main {
   flex: 1;
   min-width: 0;
+
+  min-height: 100vh;
+
+  background:
+    radial-gradient(
+      circle at 95% 5%,
+      rgba(207, 239, 228, 0.55),
+      transparent 25%
+    ),
+    #f4f8f7;
 }
 
 /* =========================================
@@ -177,62 +315,96 @@
 ========================================= */
 
 .employee-topbar {
-  height: 70px;
-  background: #ffffff;
-  border-bottom: 1px solid #e7ece9;
-  padding: 0 30px;
+  height: 56px;
+
+  padding: 0 20px;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-sizing: border-box;
+
+  background: rgba(255, 255, 255, 0.9);
+
+  border-bottom: 1px solid #e5eeeb;
 }
 
 .topbar-search {
-  width: 300px;
-  height: 38px;
-  border: 1px solid #e1e7e3;
-  border-radius: 8px;
+  width: min(420px, 45%);
+
+  height: 34px;
+
   display: flex;
   align-items: center;
+
   gap: 9px;
+
   padding: 0 12px;
-  color: #89948e;
-  background: #fafbfa;
+
+  border-radius: 10px;
+
+  background: #eef6f4;
+
+  color: #65817a;
 }
 
 .topbar-search input {
   width: 100%;
-  border: none;
-  outline: none;
+
+  border: 0;
+  outline: 0;
+
   background: transparent;
-  font-size: 12px;
-  color: #26372f;
+
+  color: #24352f;
+
+  font-size: 11px;
 }
 
 .topbar-search input::placeholder {
-  color: #a2aaa6;
+  color: #76918a;
 }
 
 .topbar-profile {
   display: flex;
   align-items: center;
-  gap: 9px;
+
+  gap: 8px;
+}
+
+.profile-avatar {
+  width: 31px;
+  height: 31px;
+
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #00634d;
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .topbar-profile > div:last-child {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+
+  gap: 1px;
 }
 
 .topbar-profile strong {
-  font-size: 12px;
-  color: #26372f;
+  color: #1a2824;
+
+  font-size: 11px;
 }
 
 .topbar-profile span {
-  font-size: 10px;
-  color: #8a958f;
+  color: #71857f;
+
+  font-size: 9px;
 }
 
 /* =========================================
@@ -241,24 +413,38 @@
 
 .employee-content {
   padding: 28px 32px 45px;
+
   max-width: 1500px;
+
   margin: 0 auto;
 }
 
-/* Back button */
+/* =========================================
+   BACK BUTTON
+========================================= */
 
 .back-dashboard {
   border: none;
+
   background: transparent;
+
   color: #607069;
+
   padding: 5px 0;
+
   display: flex;
   align-items: center;
+
   gap: 7px;
+
   font-size: 13px;
   font-weight: 600;
+
   cursor: pointer;
+
   margin-bottom: 20px;
+
+  transition: color 0.2s ease;
 }
 
 .back-dashboard:hover {
@@ -271,70 +457,101 @@
 
 .employee-page-heading {
   display: flex;
+
   align-items: flex-end;
   justify-content: space-between;
+
   gap: 25px;
+
   margin-bottom: 24px;
 }
 
 .employee-page-heading h1 {
   margin: 0;
+
   color: #1d3028;
+
   font-size: 26px;
+
   line-height: 1.25;
+
   font-weight: 750;
 }
 
 .employee-page-heading p {
   margin: 6px 0 0;
+
   color: #7a8781;
+
   font-size: 13px;
 }
 
+/* =========================================
+   ACTION BUTTONS
+========================================= */
+
 .employee-page-actions {
   display: flex;
+
   align-items: center;
+
   gap: 9px;
 }
-
-/* Buttons */
 
 .secondary-action,
 .primary-action {
   height: 38px;
+
   border-radius: 8px;
+
   padding: 0 13px;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   gap: 7px;
+
   font-size: 12px;
+
   font-weight: 650;
+
   cursor: pointer;
+
   transition: all 0.2s ease;
+
   white-space: nowrap;
 }
 
 .secondary-action {
   background: #ffffff;
+
   border: 1px solid #dce4df;
+
   color: #4f6259;
 }
 
 .secondary-action:hover {
   background: #f2f7f4;
+
   border-color: #c6d7cf;
+
   color: #064e3b;
+
+  transform: translateY(-1px);
 }
 
 .intern-action {
   color: #735b31;
+
   border-color: #e2d5c1;
+
   background: #fbf7f0;
 }
 
 .intern-action:hover {
   background: #f5ecdf;
+
   color: #654d27;
 }
 
@@ -344,14 +561,21 @@
 
 .primary-action {
   background: #064e3b;
+
   color: #ffffff;
+
   border: 1px solid #064e3b;
-  box-shadow: 0 3px 8px rgba(6, 78, 59, 0.14);
+
+  box-shadow:
+    0 3px 8px rgba(6, 78, 59, 0.14);
 }
 
 .primary-action:hover {
   background: #053d2f;
+
   border-color: #053d2f;
+
+  transform: translateY(-1px);
 }
 
 /* =========================================
@@ -360,61 +584,92 @@
 
 .employee-card {
   background: #ffffff;
+
   border: 1px solid #e4eae6;
+
   border-radius: 12px;
+
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(26, 50, 41, 0.025);
+
+  box-shadow:
+    0 2px 8px rgba(26, 50, 41, 0.025);
 }
 
 .employee-card-header {
   min-height: 70px;
+
   padding: 0 20px;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   gap: 20px;
+
   border-bottom: 1px solid #edf1ee;
 }
 
 .employee-card-header h2 {
   margin: 0;
+
   color: #26372f;
+
   font-size: 16px;
+
   font-weight: 700;
 }
 
 .employee-card-header p {
   margin: 4px 0 0;
+
   color: #8a958f;
+
   font-size: 11px;
 }
 
-/* Compact table search */
+/* =========================================
+   SEARCH
+========================================= */
 
 .employee-table-search {
   width: 210px;
   height: 34px;
+
   border: 1px solid #e0e6e2;
+
   border-radius: 7px;
+
   display: flex;
   align-items: center;
+
   gap: 7px;
+
   padding: 0 10px;
+
   color: #8b9690;
+
   background: #ffffff;
+
+  transition: all 0.2s ease;
 }
 
 .employee-table-search:focus-within {
   border-color: #8eaea1;
-  box-shadow: 0 0 0 3px rgba(6, 78, 59, 0.06);
+
+  box-shadow:
+    0 0 0 3px rgba(6, 78, 59, 0.06);
 }
 
 .employee-table-search input {
   width: 100%;
+
   border: none;
   outline: none;
+
   font-size: 12px;
+
   color: #26372f;
+
   background: transparent;
 }
 
@@ -428,31 +683,45 @@
 
 .employee-table-wrapper {
   width: 100%;
+
   overflow-x: auto;
 }
 
 .employee-table {
   width: 100%;
+
   min-width: 1050px;
+
   border-collapse: collapse;
 }
 
 .employee-table th {
   background: #fafcfb;
+
   color: #78847e;
+
   font-size: 11px;
+
   font-weight: 700;
+
   text-align: left;
+
   padding: 12px 15px;
+
   border-bottom: 1px solid #e9eeeb;
+
   white-space: nowrap;
 }
 
 .employee-table td {
   padding: 13px 15px;
+
   border-bottom: 1px solid #eef2ef;
+
   color: #596861;
+
   font-size: 12px;
+
   white-space: nowrap;
 }
 
@@ -468,50 +737,70 @@
   border-bottom: none;
 }
 
-/* Employee ID */
+/* =========================================
+   EMPLOYEE ID
+========================================= */
 
 .employee-id {
   color: #064e3b;
+
   font-size: 12px;
+
   font-weight: 700;
 }
 
-/* Employee */
+/* =========================================
+   EMPLOYEE PERSON
+========================================= */
 
 .employee-person {
   display: flex;
+
   align-items: center;
+
   gap: 9px;
 }
 
 .employee-avatar {
   width: 31px;
   height: 31px;
+
   min-width: 31px;
+
   border-radius: 50%;
+
   background: #e8f1ed;
+
   color: #064e3b;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   font-size: 11px;
+
   font-weight: 750;
 }
 
 .employee-person > div:last-child {
   display: flex;
+
   flex-direction: column;
+
   gap: 3px;
 }
 
 .employee-person strong {
   color: #2d3d36;
+
   font-size: 12px;
+
   font-weight: 650;
 }
 
 .employee-person span {
   color: #929c97;
+
   font-size: 10px;
 }
 
@@ -521,22 +810,30 @@
 
 .status-pill {
   display: inline-flex;
+
   align-items: center;
+
   gap: 6px;
+
   padding: 5px 9px;
+
   border-radius: 20px;
+
   font-size: 10px;
+
   font-weight: 700;
 }
 
 .status-dot {
   width: 5px;
   height: 5px;
+
   border-radius: 50%;
 }
 
 .status-pill.active {
   color: #18734d;
+
   background: #e9f6ef;
 }
 
@@ -546,6 +843,7 @@
 
 .status-pill.inactive {
   color: #a94a4a;
+
   background: #fbeded;
 }
 
@@ -559,21 +857,34 @@
 
 .row-actions {
   display: flex;
+
   align-items: center;
+
   gap: 5px;
 }
 
 .row-action {
   width: 29px;
   height: 29px;
+
   border-radius: 6px;
+
   border: 1px solid #e1e7e3;
+
   background: #ffffff;
+
   display: flex;
+
   align-items: center;
   justify-content: center;
+
   cursor: pointer;
+
   transition: all 0.18s ease;
+}
+
+.row-action:hover {
+  transform: translateY(-1px);
 }
 
 .row-action.view {
@@ -582,7 +893,9 @@
 
 .row-action.view:hover {
   color: #315c87;
+
   background: #f0f6fc;
+
   border-color: #cbdbe9;
 }
 
@@ -592,7 +905,9 @@
 
 .row-action.edit:hover {
   color: #72531f;
+
   background: #fbf6eb;
+
   border-color: #e5d5b5;
 }
 
@@ -602,34 +917,55 @@
 
 .row-action.delete:hover {
   color: #943e3e;
+
   background: #fff2f2;
+
   border-color: #e8caca;
 }
 
 /* =========================================
-   LOADING / ERROR
+   LOADING
 ========================================= */
 
 .employee-loading {
   padding: 60px 20px;
+
   text-align: center;
+
   color: #7b8881;
+
   font-size: 13px;
 }
 
+/* =========================================
+   ERROR
+========================================= */
+
 .employee-error {
   margin: 15px 20px;
+
   padding: 11px 14px;
+
   border-radius: 7px;
+
   background: #fff2f2;
+
   border: 1px solid #ebcccc;
+
   color: #aa4848;
+
   font-size: 12px;
 }
 
+/* =========================================
+   EMPTY
+========================================= */
+
 .no-employees {
   text-align: center;
+
   padding: 55px 20px !important;
+
   color: #8b9690 !important;
 }
 
@@ -638,9 +974,10 @@
 ========================================= */
 
 @media (max-width: 1100px) {
-  .employee-sidebar {
-    width: 190px;
-    min-width: 190px;
+
+  .sidebar {
+    width: 175px;
+    min-width: 175px;
   }
 
   .employee-content {
@@ -649,6 +986,7 @@
 
   .employee-page-heading {
     align-items: flex-start;
+
     flex-direction: column;
   }
 
@@ -657,63 +995,64 @@
   }
 }
 
-@media (max-width: 800px) {
-  .employee-sidebar {
-    width: 70px;
-    min-width: 70px;
-    padding: 16px 9px;
+@media (max-width: 900px) {
+
+  .employee-page-heading {
+    gap: 15px;
   }
 
-  .sidebar-brand {
-    justify-content: center;
-    padding: 0;
+  .employee-card-header {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    padding: 15px;
   }
 
-  .sidebar-brand span,
-  .sidebar-label,
-  .sidebar-item span,
-  .user-info {
-    display: none;
-  }
-
-  .sidebar-item {
-    justify-content: center;
-    padding: 0;
-  }
-
-  .sidebar-arrow {
-    display: none;
-  }
-
-  .sidebar-user {
-    justify-content: center;
-    padding: 12px 0;
-  }
-
-  .employee-topbar {
-    padding: 0 20px;
-  }
-
-  .topbar-search {
-    width: 220px;
+  .employee-table-search {
+    width: 100%;
   }
 }
 
-@media (max-width: 600px) {
-  .employee-content {
-    padding: 20px 14px 35px;
+@media (max-width: 700px) {
+
+  .sidebar {
+    width: 64px;
+    min-width: 64px;
+
+    padding: 12px 8px;
+  }
+
+  .brand {
+    justify-content: center;
+  }
+
+  .brand-text,
+  .nav-item span,
+  .sidebar-bottom-card {
+    display: none;
+  }
+
+  .nav-item {
+    justify-content: center;
+
+    padding: 0;
   }
 
   .employee-topbar {
-    height: 62px;
+    padding: 0 12px;
   }
 
   .topbar-search {
-    width: 180px;
+    width: 55%;
   }
 
   .topbar-profile > div:last-child {
     display: none;
+  }
+
+  .employee-content {
+    padding: 20px 14px 35px;
   }
 
   .employee-page-actions {
@@ -724,14 +1063,19 @@
   .primary-action {
     flex: 1;
   }
+}
 
-  .employee-card-header {
-    align-items: flex-start;
-    flex-direction: column;
-    padding: 15px;
+@media (max-width: 500px) {
+
+  .employee-topbar {
+    height: 54px;
   }
 
-  .employee-table-search {
-    width: 100%;
+  .topbar-search {
+    width: 65%;
+  }
+
+  .employee-page-heading h1 {
+    font-size: 23px;
   }
 }

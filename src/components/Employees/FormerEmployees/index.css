@@ -1,0 +1,265 @@
+.former-employees-page {
+  min-height: 100vh;
+  padding: 30px 38px;
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(20, 154, 116, 0.09),
+      transparent 35%
+    ),
+    #f4f8f6;
+  color: #17352e;
+}
+
+.former-header {
+  margin-bottom: 25px;
+}
+
+.former-back-button {
+  border: none;
+  background: white;
+  color: #27685a;
+  padding: 10px 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+  margin-bottom: 22px;
+}
+
+.former-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.former-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    #087f62,
+    #00503f
+  );
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.former-title span {
+  color: #128064;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.former-title h1 {
+  margin: 3px 0;
+  font-size: 27px;
+}
+
+.former-title p {
+  margin: 0;
+  color: #82948e;
+  font-size: 13px;
+}
+
+.former-card {
+  background: white;
+  border: 1px solid #dfeae6;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 35px rgba(30, 75, 62, 0.06);
+}
+
+.former-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 24px;
+  border-bottom: 1px solid #e9efed;
+}
+
+.former-card-header h2 {
+  margin: 0 0 4px;
+  font-size: 17px;
+}
+
+.former-card-header p {
+  margin: 0;
+  color: #8b9b96;
+  font-size: 12px;
+}
+
+.former-search {
+  width: 280px;
+  height: 39px;
+  border: 1px solid #dce8e4;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  color: #82958e;
+}
+
+.former-search input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 12px;
+}
+
+.former-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.former-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.former-table th {
+  text-align: left;
+  padding: 14px 18px;
+  background: #f8fbfa;
+  color: #72857f;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.former-table td {
+  padding: 15px 18px;
+  border-top: 1px solid #edf2f0;
+  color: #38564e;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.former-table tbody tr:hover {
+  background: #fbfdfc;
+}
+
+.former-id {
+  color: #08775c;
+  font-weight: 800;
+}
+
+.former-person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.former-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #e3f4ee;
+  color: #08775c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.former-person strong {
+  display: block;
+  color: #294d44;
+  font-size: 12px;
+}
+
+.former-person span {
+  display: block;
+  margin-top: 3px;
+  color: #8b9b96;
+  font-size: 10px;
+}
+
+.former-status {
+  background: #fff0ed;
+  color: #bd5a50;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.former-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.former-actions button {
+  width: 31px;
+  height: 31px;
+  border-radius: 8px;
+  border: 1px solid #e0e9e6;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.former-view {
+  color: #08775c;
+}
+
+.former-view:hover {
+  background: #e8f7f1;
+}
+
+.former-delete {
+  color: #c45a50;
+}
+
+.former-delete:hover {
+  background: #fff0ed;
+}
+
+.no-former-employees {
+  height: 260px;
+  text-align: center;
+}
+
+.no-former-employees svg {
+  display: block;
+  margin: 0 auto 12px;
+  color: #a5b5b0;
+}
+
+.no-former-employees strong {
+  display: block;
+  color: #506a62;
+  margin-bottom: 5px;
+}
+
+.no-former-employees span {
+  color: #94a39e;
+  font-size: 12px;
+}
+
+@media (max-width: 800px) {
+  .former-employees-page {
+    padding: 22px 15px;
+  }
+
+  .former-card-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .former-search {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}

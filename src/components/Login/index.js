@@ -106,25 +106,37 @@ const Login = () => {
 
         Remember Me not checked:
         sessionStorage
-      */
-      const storage = rememberMe
-        ? localStorage
-        : sessionStorage;
+      */// Clear previous authentication data
+localStorage.removeItem("token");
+localStorage.removeItem("hirenestToken");
+localStorage.removeItem("hirenestEmail");
+localStorage.removeItem("hirenestRole");
 
-      storage.setItem(
-        "hirenestToken",
-        data.token
-      );
+sessionStorage.removeItem("token");
+sessionStorage.removeItem("hirenestToken");
+sessionStorage.removeItem("hirenestEmail");
+sessionStorage.removeItem("hirenestRole");
 
-      storage.setItem(
-        "hirenestEmail",
-        data.email || formData.email
-      );
+// Choose storage based on Remember Me
+const storage = rememberMe
+  ? localStorage
+  : sessionStorage;
 
-      storage.setItem(
-        "hirenestRole",
-        data.role || ""
-      );
+// Store JWT token
+storage.setItem("token", data.token);
+storage.setItem("hirenestToken", data.token);
+
+// Store email
+storage.setItem(
+  "hirenestEmail",
+  data.email || formData.email
+);
+
+// Store role
+storage.setItem(
+  "hirenestRole",
+  data.role || ""
+);
 
       // Login successful
       navigate("/dashboard");

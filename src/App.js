@@ -11,6 +11,10 @@ import ForgotPassword from "./components/ForgotPassword";
 import Register from "./components/Register";
 import Dashboard from "./components/Dashboard";
 import EmployeeList from "./components/Employees/EmployeeList";
+import AddEmployee from "./components/Employees/AddEmployee";
+import EmployeeDetails from "./components/Employees/EmployeeDetails";
+import EditEmployee from "./components/Employees/EditEmployee";
+import FormerEmployees from "./components/Employees/FormerEmployees";
 
 function ModulePage({ title }) {
   return (
@@ -110,15 +114,36 @@ function App() {
           path="/settings"
           element={<ModulePage title="Settings" />}
         />
+        
+        <Route
+  path="/employees/:id"
+  element={<EmployeeDetails />}
+/>
 
-        {/* UNKNOWN URL */}
+
+       
+        <Route path="/employees" element={<EmployeeList />} />
+
+        <Route
+  path="/employees/add"
+  element={<AddEmployee />}
+/>
+<Route
+  path="/employees/:id/edit"
+  element={<EditEmployee />}
+/>
+
+<Route
+  path="/former-employees"
+  element={<FormerEmployees />}
+/>
+
+ {/* UNKNOWN URL */}
 
         <Route
           path="*"
           element={<Navigate to="/dashboard" replace />}
         />
-
-        <Route path="/employees" element={<EmployeeList />} />
 
       </Routes>
     </BrowserRouter>

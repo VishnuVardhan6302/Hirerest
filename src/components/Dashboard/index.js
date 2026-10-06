@@ -364,12 +364,31 @@ function Dashboard() {
     className="profile-menu"
     onClick={() => setShowProfileMenu(!showProfileMenu)}
   >
-    <div className="profile-avatar">G</div>
+    <div className="topbar-profile">
+  <div className="profile-avatar">
+    {(
+      localStorage.getItem("hirenestEmail") ||
+      sessionStorage.getItem("hirenestEmail") ||
+      "U"
+    )
+      .charAt(0)
+      .toUpperCase()}
+  </div>
 
-    <div className="profile-details">
-      <strong>Gomathi</strong>
-      <span>HR</span>
-    </div>
+  <div>
+    <strong>
+      {localStorage.getItem("hirenestEmail") ||
+        sessionStorage.getItem("hirenestEmail") ||
+        "User"}
+    </strong>
+
+    <span>
+      {localStorage.getItem("hirenestRole") ||
+        sessionStorage.getItem("hirenestRole") ||
+        "User"}
+    </span>
+  </div>
+</div>
 
     <ChevronDown size={17} />
   </button>

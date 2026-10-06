@@ -1,0 +1,606 @@
+/* =========================================================
+   EDIT EMPLOYEE PAGE
+   ========================================================= */
+
+.edit-employee-page {
+  min-height: 100vh;
+  padding: 30px 38px;
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(20, 154, 116, 0.1),
+      transparent 35%
+    ),
+    #f4f8f6;
+  color: #17352e;
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.edit-header {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  margin-bottom: 28px;
+}
+
+.edit-back-button {
+  border: 1px solid #e0ebe7;
+  background: #ffffff;
+  color: #27685a;
+  padding: 10px 15px;
+  border-radius: 10px;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.edit-back-button:hover {
+  background: #e8f4ef;
+  transform: translateX(-2px);
+  box-shadow: 0 5px 15px rgba(20, 100, 80, 0.08);
+}
+
+.edit-eyebrow {
+  display: block;
+  color: #118061;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.edit-header h1 {
+  margin: 0 0 4px;
+  color: #143b32;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.edit-header p {
+  margin: 0;
+  color: #83968f;
+  font-size: 13px;
+}
+
+/* =========================================================
+   MAIN CARD
+   ========================================================= */
+
+.edit-card {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+
+  background: #ffffff;
+  border: 1px solid #dfebe6;
+  border-radius: 20px;
+
+  box-shadow:
+    0 12px 40px rgba(25, 74, 61, 0.07),
+    0 2px 8px rgba(25, 74, 61, 0.03);
+
+  overflow: hidden;
+}
+
+/* =========================================================
+   CARD TOP
+   ========================================================= */
+
+.edit-card-top {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+
+  padding: 24px 28px;
+
+  border-bottom: 1px solid #eaf0ee;
+
+  background:
+    linear-gradient(
+      135deg,
+      #fbfefd 0%,
+      #f3faf7 100%
+    );
+}
+
+.edit-title-icon {
+  width: 43px;
+  height: 43px;
+
+  flex-shrink: 0;
+
+  border-radius: 12px;
+
+  background: #e1f4ed;
+  color: #08765b;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow:
+    0 6px 16px rgba(8, 118, 91, 0.08);
+}
+
+.edit-card-top h2 {
+  margin: 0 0 4px;
+
+  color: #234b41;
+  font-size: 17px;
+  font-weight: 750;
+}
+
+.edit-card-top p {
+  margin: 0;
+
+  color: #899b95;
+  font-size: 12px;
+}
+
+/* =========================================================
+   SECTIONS
+   ========================================================= */
+
+.edit-section {
+  padding: 28px;
+
+  border-bottom: 1px solid #edf2f0;
+}
+
+.edit-section:last-of-type {
+  border-bottom: none;
+}
+
+.edit-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin-bottom: 21px;
+
+  color: #08765b;
+}
+
+.edit-section-heading > svg {
+  flex-shrink: 0;
+}
+
+.edit-section-heading h3 {
+  margin: 0 0 3px;
+
+  color: #234b41;
+  font-size: 15px;
+  font-weight: 750;
+}
+
+.edit-section-heading p {
+  margin: 0;
+
+  color: #94a39e;
+  font-size: 11px;
+}
+
+/* =========================================================
+   FORM GRID
+   ========================================================= */
+
+.edit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 19px;
+}
+
+/* =========================================================
+   FIELD
+   ========================================================= */
+
+.edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.edit-field label {
+  color: #536e65;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   INPUT
+   ========================================================= */
+
+.edit-input {
+  min-height: 45px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 0 13px;
+
+  border: 1px solid #dce8e4;
+  border-radius: 10px;
+
+  background: #fbfdfc;
+
+  box-sizing: border-box;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.edit-input:hover {
+  border-color: #c8ddd6;
+  background: #ffffff;
+}
+
+.edit-input:focus-within {
+  border-color: #159a74;
+
+  box-shadow:
+    0 0 0 3px rgba(21, 154, 116, 0.09);
+
+  background: #ffffff;
+}
+
+.edit-input > svg {
+  color: #729088;
+  flex-shrink: 0;
+}
+
+.edit-input input,
+.edit-input select {
+  width: 100%;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+
+  color: #294d44;
+
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.edit-input input::placeholder {
+  color: #a3b1ad;
+}
+
+/* =========================================================
+   SELECT
+   ========================================================= */
+
+.edit-input select {
+  cursor: pointer;
+  appearance: auto;
+}
+
+.edit-input select option {
+  color: #294d44;
+  background: #ffffff;
+}
+
+.edit-input select + svg {
+  color: #729088;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+/* =========================================================
+   TEXTAREA
+   ========================================================= */
+
+.edit-field textarea {
+  width: 100%;
+  min-height: 95px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #dce8e4;
+  border-radius: 10px;
+
+  background: #fbfdfc;
+
+  padding: 12px 13px;
+
+  resize: vertical;
+
+  outline: none;
+
+  color: #294d44;
+
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.edit-field textarea:hover {
+  border-color: #c8ddd6;
+  background: #ffffff;
+}
+
+.edit-field textarea:focus {
+  border-color: #159a74;
+
+  box-shadow:
+    0 0 0 3px rgba(21, 154, 116, 0.09);
+
+  background: #ffffff;
+}
+
+.edit-field textarea::placeholder {
+  color: #a3b1ad;
+}
+
+/* =========================================================
+   FULL WIDTH FIELD
+   ========================================================= */
+
+.full-edit-field {
+  grid-column: 1 / -1;
+}
+
+/* =========================================================
+   MESSAGES
+   ========================================================= */
+
+.edit-message {
+  margin: 20px 28px 0;
+
+  padding: 12px 15px;
+
+  border-radius: 10px;
+
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.edit-error {
+  background: #fff1ef;
+  color: #b84e45;
+  border: 1px solid #f4d2ce;
+}
+
+.edit-success {
+  background: #eaf8f2;
+  color: #087452;
+  border: 1px solid #ccebdd;
+}
+
+/* =========================================================
+   ACTION BUTTONS
+   ========================================================= */
+
+.edit-actions {
+  padding: 22px 28px;
+
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 11px;
+
+  background: #fbfdfc;
+
+  border-top: 1px solid #edf2f0;
+}
+
+.edit-cancel,
+.edit-save {
+  min-height: 42px;
+
+  padding: 0 18px;
+
+  border-radius: 9px;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* Cancel */
+
+.edit-cancel {
+  border: 1px solid #dce7e3;
+
+  background: #ffffff;
+
+  color: #49645c;
+}
+
+.edit-cancel:hover {
+  background: #f1f6f4;
+  border-color: #cbdcd6;
+}
+
+/* Save */
+
+.edit-save {
+  border: none;
+
+  background:
+    linear-gradient(
+      135deg,
+      #08775c,
+      #00513f
+    );
+
+  color: #ffffff;
+
+  box-shadow:
+    0 6px 16px rgba(0, 91, 70, 0.16);
+}
+
+.edit-save:hover {
+  background:
+    linear-gradient(
+      135deg,
+      #096b54,
+      #004536
+    );
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 9px 20px rgba(0, 91, 70, 0.22);
+}
+
+.edit-save:active {
+  transform: translateY(0);
+}
+
+/* Disabled */
+
+.edit-save:disabled,
+.edit-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.edit-loading {
+  min-height: 80vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #08765b;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   SPINNER
+   ========================================================= */
+
+.edit-spinner {
+  animation: editSpin 0.9s linear infinite;
+}
+
+@keyframes editSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .edit-employee-page {
+    padding: 25px 20px;
+  }
+
+  .edit-card {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 750px) {
+  .edit-employee-page {
+    padding: 22px 15px;
+  }
+
+  .edit-header {
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .edit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .full-edit-field {
+    grid-column: auto;
+  }
+
+  .edit-section {
+    padding: 22px;
+  }
+
+  .edit-card-top {
+    padding: 20px 22px;
+  }
+
+  .edit-actions {
+    padding: 18px 22px;
+  }
+
+  .edit-message {
+    margin-left: 22px;
+    margin-right: 22px;
+  }
+}
+
+@media (max-width: 500px) {
+  .edit-header h1 {
+    font-size: 24px;
+  }
+
+  .edit-back-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .edit-actions {
+    flex-direction: column-reverse;
+  }
+
+  .edit-cancel,
+  .edit-save {
+    width: 100%;
+  }
+}
