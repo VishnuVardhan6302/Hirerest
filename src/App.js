@@ -15,6 +15,7 @@ import AddEmployee from "./components/Employees/AddEmployee";
 import EmployeeDetails from "./components/Employees/EmployeeDetails";
 import EditEmployee from "./components/Employees/EditEmployee";
 import FormerEmployees from "./components/Employees/FormerEmployees";
+import Interns from "./components/Employees/Interns";
 
 function ModulePage({ title }) {
   return (
@@ -115,19 +116,18 @@ function App() {
           element={<ModulePage title="Settings" />}
         />
         
-        <Route
+       <Route
   path="/employees/:id"
   element={<EmployeeDetails />}
 />
 
+<Route path="/employees" element={<EmployeeList />} />
 
-       
-        <Route path="/employees" element={<EmployeeList />} />
-
-        <Route
+<Route
   path="/employees/add"
   element={<AddEmployee />}
 />
+
 <Route
   path="/employees/:id/edit"
   element={<EditEmployee />}
@@ -137,6 +137,17 @@ function App() {
   path="/former-employees"
   element={<FormerEmployees />}
 />
+
+<Route
+  path="/employees"
+  element={<EmployeeList />}
+/>
+
+<Route
+  path="/employees/interns"
+  element={<Interns />}
+/>
+
 
  {/* UNKNOWN URL */}
 
