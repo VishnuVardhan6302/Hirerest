@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import "./index.css";
 
 import {
   Home,
@@ -24,155 +25,9 @@ import {
   X,
 } from "lucide-react";
 
-import "./index.css";
-
-const domainData = [
-  {
-    name: "Development",
-    value: 35,
-    percentage: 27,
-    className: "development",
-  },
-  {
-    name: "Testing",
-    value: 28,
-    percentage: 22,
-    className: "testing",
-  },
-  {
-    name: "Design",
-    value: 18,
-    percentage: 14,
-    className: "design",
-  },
-  {
-    name: "HR",
-    value: 16,
-    percentage: 13,
-    className: "hr",
-  },
-  {
-    name: "Finance",
-    value: 14,
-    percentage: 11,
-    className: "finance",
-  },
-  {
-    name: "Others",
-    value: 17,
-    percentage: 13,
-    className: "others",
-  },
-];
-
-const probationData = [
-  {
-    label: "In Progress",
-    value: 16,
-    className: "progress",
-  },
-  {
-    label: "Due Soon",
-    value: 8,
-    className: "due",
-  },
-  {
-    label: "Completed",
-    value: 32,
-    className: "completed",
-  },
-  {
-    label: "Extended",
-    value: 6,
-    className: "extended",
-  },
-];
-
-const recentEmployees = [
-  {
-    id: "EMP001",
-    name: "Rahul Kumar",
-    domain: "Development",
-    joiningDate: "12 Sep 2026",
-    status: "Active",
-    avatar: "R",
-  },
-  {
-    id: "EMP002",
-    name: "Priya Sharma",
-    domain: "Testing",
-    joiningDate: "10 Sep 2026",
-    status: "Active",
-    avatar: "P",
-  },
-  {
-    id: "EMP003",
-    name: "Arun N",
-    domain: "Design",
-    joiningDate: "08 Sep 2026",
-    status: "Probation",
-    avatar: "A",
-  },
-  {
-    id: "EMP004",
-    name: "Sneha R",
-    domain: "HR",
-    joiningDate: "05 Sep 2026",
-    status: "Active",
-    avatar: "S",
-  },
-  {
-    id: "EMP005",
-    name: "Karthik M",
-    domain: "Finance",
-    joiningDate: "01 Sep 2026",
-    status: "Active",
-    avatar: "K",
-  },
-];
-
-const recentRecords = [
-  {
-    id: "EMP012",
-    title: "Employee Joined",
-    description: "New employee added",
-    time: "Today",
-    icon: UserPlus,
-    className: "record-green",
-  },
-  {
-    id: "EMP018",
-    title: "Profile Updated",
-    description: "Employee details updated",
-    time: "Today",
-    icon: FileEdit,
-    className: "record-blue",
-  },
-  {
-    id: "EMP021",
-    title: "Probation Updated",
-    description: "Probation status changed",
-    time: "Yesterday",
-    icon: ShieldCheck,
-    className: "record-orange",
-  },
-  {
-    id: "EMP025",
-    title: "Document Added",
-    description: "Employee document uploaded",
-    time: "Yesterday",
-    icon: FileText,
-    className: "record-purple",
-  },
-  {
-    id: "EMP027",
-    title: "Domain Changed",
-    description: "Employee domain updated",
-    time: "2 days ago",
-    icon: Layers3,
-    className: "record-teal",
-  },
-];
+/* =========================================================
+   SIDEBAR NAVIGATION
+========================================================= */
 
 const navigationItems = [
   {
@@ -221,6 +76,11 @@ const navigationItems = [
     path: "/settings",
   },
 ];
+
+/* =========================================================
+   STAT CARD
+========================================================= */
+
 function StatCard({
   icon: Icon,
   title,
@@ -228,7 +88,6 @@ function StatCard({
   change,
   subtitle,
   type,
-  down,
 }) {
   return (
     <div className="stat-card">
@@ -243,17 +102,26 @@ function StatCard({
           <strong>{value}</strong>
         </div>
 
-        <span className="stat-subtitle">{subtitle}</span>
+        <span className="stat-subtitle">
+          {change ? `${change} ` : ""}
+          {subtitle}
+        </span>
       </div>
     </div>
   );
 }
 
+/* =========================================================
+   STATUS BADGE
+========================================================= */
+
 function StatusBadge({ status }) {
   return (
     <span
       className={`status-badge ${
-        status === "Probation" ? "probation-badge" : "active-badge"
+        status === "Probation"
+          ? "probation-badge"
+          : "active-badge"
       }`}
     >
       {status}
@@ -261,410 +129,1322 @@ function StatusBadge({ status }) {
   );
 }
 
+/* =========================================================
+   DATE FORMATTER
+========================================================= */
+
+function formatDate(dateValue) {
+  if (!dateValue) {
+    return "-";
+  }
+
+  const date = new Date(dateValue);
+
+  if (Number.isNaN(date.getTime())) {
+    return dateValue;
+  }
+
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
 function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
+
+  /* -------------------------------------------------------
+     DASHBOARD API STATE
+  ------------------------------------------------------- */
+
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  /* -------------------------------------------------------
+     UI STATE
+  ------------------------------------------------------- */
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [period, setPeriod] = useState("This Month");
 
+  /* =======================================================
+     GET JWT TOKEN
+  ======================================================= */
+
+  const getAuthToken = () => {
+    const localToken = localStorage.getItem("hirenestToken");
+
+    const sessionToken = sessionStorage.getItem("hirenestToken");
+
+    const oldLocalToken = localStorage.getItem("token");
+
+    const oldSessionToken = sessionStorage.getItem("token");
+
+    return (
+      localToken ||
+      sessionToken ||
+      oldLocalToken ||
+      oldSessionToken
+    );
+  };
+
+  /* =======================================================
+     FETCH DASHBOARD DATA
+  ======================================================= */
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const token = getAuthToken();
+
+        console.log(
+          "Dashboard Token:",
+          token ? "Token found" : "Token missing"
+        );
+
+        /* -----------------------------------------------
+           TOKEN CHECK
+        ------------------------------------------------ */
+
+        if (!token) {
+          setError("Authentication token not found.");
+          setLoading(false);
+          return;
+        }
+
+        /* -----------------------------------------------
+           API REQUEST
+        ------------------------------------------------ */
+
+        const response = await fetch(
+          "http://localhost:8080/api/dashboard",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        console.log(
+          "Dashboard API Status:",
+          response.status
+        );
+
+        /* -----------------------------------------------
+           UNAUTHORIZED
+        ------------------------------------------------ */
+
+        if (response.status === 401) {
+          setError(
+            "Your session has expired. Please login again."
+          );
+
+          setLoading(false);
+
+          return;
+        }
+
+        /* -----------------------------------------------
+           FORBIDDEN
+        ------------------------------------------------ */
+
+        if (response.status === 403) {
+          setError(
+            "You are not authorized to access the Dashboard."
+          );
+
+          setLoading(false);
+
+          return;
+        }
+
+        /* -----------------------------------------------
+           OTHER API ERRORS
+        ------------------------------------------------ */
+
+        if (!response.ok) {
+          throw new Error(
+            `Dashboard API error: ${response.status}`
+          );
+        }
+
+        /* -----------------------------------------------
+           READ JSON
+        ------------------------------------------------ */
+
+        const data = await response.json();
+
+        console.log(
+          "Dashboard API Response:",
+          data
+        );
+
+        setDashboardData(data);
+      } catch (err) {
+        console.error(
+          "Dashboard error:",
+          err
+        );
+
+        setError(
+          err.message ||
+            "Unable to load dashboard data."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboard();
+  }, []);
+
+  /* =======================================================
+     NAVIGATION
+  ======================================================= */
+
   const handleNavigation = (path) => {
     navigate(path);
   };
 
+  /* =======================================================
+     LOGOUT
+  ======================================================= */
+
   const handleLogout = () => {
+    /* Remove authentication from localStorage */
+
     localStorage.removeItem("token");
+    localStorage.removeItem("hirenestToken");
+    localStorage.removeItem("hirenestEmail");
+    localStorage.removeItem("hirenestRole");
     localStorage.removeItem("email");
     localStorage.removeItem("role");
 
+    /* Remove authentication from sessionStorage */
+
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("hirenestToken");
+    sessionStorage.removeItem("hirenestEmail");
+    sessionStorage.removeItem("hirenestRole");
+    sessionStorage.removeItem("email");
+    sessionStorage.removeItem("role");
+
     navigate("/login");
   };
+
+  /* =======================================================
+     BACKEND DASHBOARD VALUES
+  ======================================================= */
+
+  const totalEmployees =
+    dashboardData?.totalEmployees ?? 0;
+
+  const totalInterns =
+    dashboardData?.totalInterns ?? 0;
+
+  const fullTimeEmployees =
+    dashboardData?.totalFullTimeEmployees ?? 0;
+
+  const totalDomains =
+    dashboardData?.totalDomains ?? 0;
+
+  const probationInProgress =
+    dashboardData?.probationInProgress ?? 0;
+
+  const probationCompleted =
+    dashboardData?.probationCompleted ?? 0;
+
+  const probationDueSoon =
+    dashboardData?.probationDueSoon ?? 0;
+
+  /* =======================================================
+     EMPLOYEES BY DOMAIN
+  ======================================================= */
+
+  const backendDomainData =
+    dashboardData?.employeesByDomain || [];
+
+  const domainTotal = backendDomainData.reduce(
+    (total, item) =>
+      total + Number(item.employeeCount || 0),
+    0
+  );
+
+  const domainData = backendDomainData.map(
+    (domain, index) => {
+      const count = Number(
+        domain.employeeCount || 0
+      );
+
+      const percentage =
+        domainTotal > 0
+          ? Math.round(
+              (count / domainTotal) * 100
+            )
+          : 0;
+
+      const classNames = [
+        "development",
+        "testing",
+        "design",
+        "hr",
+        "finance",
+        "others",
+      ];
+
+      return {
+        name: domain.domainName,
+        value: count,
+        percentage,
+        className:
+          classNames[index % classNames.length],
+      };
+    }
+  );
+
+  /* =======================================================
+     PROBATION DATA
+  ======================================================= */
+
+  const probationData = [
+    {
+      label: "In Progress",
+      value: probationInProgress,
+      className: "progress",
+    },
+    {
+      label: "Due Soon",
+      value: probationDueSoon,
+      className: "due",
+    },
+    {
+      label: "Completed",
+      value: probationCompleted,
+      className: "completed",
+    },
+  ];
+
+  const probationMaximum = Math.max(
+    ...probationData.map(
+      (item) => item.value
+    ),
+    1
+  );
+
+  /* =======================================================
+     RECENTLY JOINED EMPLOYEES
+  ======================================================= */
+
+  const recentEmployees =
+    dashboardData?.recentlyJoinedEmployees || [];
+
+  /* =======================================================
+     RECENT RECORDS
+  ======================================================= */
+
+  const backendRecentRecords =
+    dashboardData?.recentRecords || [];
+
+  const getRecordIcon = (recordType) => {
+    const type = String(
+      recordType || ""
+    ).toLowerCase();
+
+    if (type.includes("employment")) {
+      return BriefcaseBusiness;
+    }
+
+    if (type.includes("document")) {
+      return FileText;
+    }
+
+    if (type.includes("probation")) {
+      return ShieldCheck;
+    }
+
+    if (type.includes("domain")) {
+      return Layers3;
+    }
+
+    if (
+      type.includes("profile") ||
+      type.includes("employee")
+    ) {
+      return UserPlus;
+    }
+
+    return FileEdit;
+  };
+
+  const getRecordClass = (recordType) => {
+    const type = String(
+      recordType || ""
+    ).toLowerCase();
+
+    if (type.includes("employment")) {
+      return "record-green";
+    }
+
+    if (type.includes("document")) {
+      return "record-purple";
+    }
+
+    if (type.includes("probation")) {
+      return "record-orange";
+    }
+
+    if (type.includes("domain")) {
+      return "record-teal";
+    }
+
+    return "record-blue";
+  };
+
+  const recentRecords =
+    backendRecentRecords.map(
+      (record) => ({
+        id: record.employeeCode,
+        title:
+          record.recordType ||
+          "Employee Record",
+        description:
+          record.fullName ||
+          "Employee record updated",
+        time: formatDate(
+          record.recordDate
+        ),
+        icon: getRecordIcon(
+          record.recordType
+        ),
+        className:
+          getRecordClass(
+            record.recordType
+          ),
+      })
+    );
+
+  /* =======================================================
+     CURRENT USER DETAILS
+  ======================================================= */
+
+  const userEmail =
+    localStorage.getItem(
+      "hirenestEmail"
+    ) ||
+    sessionStorage.getItem(
+      "hirenestEmail"
+    ) ||
+    "User";
+
+  const userRole =
+    localStorage.getItem(
+      "hirenestRole"
+    ) ||
+    sessionStorage.getItem(
+      "hirenestRole"
+    ) ||
+    "User";
+
+  const userInitial =
+    userEmail.charAt(0).toUpperCase();
+
+  /* =======================================================
+     RENDER
+  ======================================================= */
+
   return (
     <div className="dashboard-page">
-      {/* SIDEBAR */}
+
+      {/* =================================================
+          SIDEBAR
+      ================================================= */}
+
       <aside className="sidebar">
+
         <div className="brand">
-          <div className="brand-logo">H</div>
+
+          <div className="brand-logo">
+            H
+          </div>
 
           <div className="brand-text">
+
             <h2>HireNest</h2>
-            <span>EMPLOYEE MANAGEMENT</span>
+
+            <span>
+              EMPLOYEE MANAGEMENT
+            </span>
+
           </div>
+
         </div>
 
         <nav className="sidebar-nav">
-  {navigationItems.map((item) => {
-    const Icon = item.icon;
 
-    const isActive =
-      location.pathname === item.path ||
-      (item.path === "/dashboard" &&
-        location.pathname === "/");
+          {navigationItems.map((item) => {
 
-    return (
-      <button
-        key={item.label}
-        className={`nav-item ${isActive ? "active" : ""}`}
-        onClick={() => handleNavigation(item.path)}
-      >
-        <Icon size={19} strokeWidth={2} />
-        <span>{item.label}</span>
-      </button>
-    );
-  })}
-</nav>
+            const Icon = item.icon;
+
+            const isActive =
+              location.pathname === item.path ||
+              (
+                item.path === "/dashboard" &&
+                location.pathname === "/"
+              );
+
+            return (
+              <button
+                key={item.label}
+                className={`nav-item ${
+                  isActive
+                    ? "active"
+                    : ""
+                }`}
+                onClick={() =>
+                  handleNavigation(
+                    item.path
+                  )
+                }
+              >
+
+                <Icon
+                  size={19}
+                  strokeWidth={2}
+                />
+
+                <span>
+                  {item.label}
+                </span>
+
+              </button>
+            );
+          })}
+
+        </nav>
 
         <div className="sidebar-bottom-card">
+
           <div className="plant-decoration">
+
             <span></span>
             <span></span>
             <span></span>
+
           </div>
 
-          <h3>Build a Better Workplace</h3>
+          <h3>
+            Build a Better Workplace
+          </h3>
 
           <p>
-            Manage your team efficiently with Hirenest.
+            Manage your team efficiently
+            with Hirenest.
           </p>
+
         </div>
+
       </aside>
 
-      {/* MAIN CONTENT */}
+      {/* =================================================
+          MAIN CONTENT
+      ================================================= */}
+
       <main className="main-content">
-        {/* TOP BAR */}
+
+        {/* =================================================
+            TOP BAR
+        ================================================= */}
+
         <header className="topbar">
+
           <div className="search-box">
-  <Search size={19} />
 
-  <input
-    type="text"
-    placeholder="Search employees, domains, documents..."
-    value={searchText}
-    onChange={(e) => setSearchText(e.target.value)}
-  />
+            <Search size={19} />
 
-  {searchText && (
-    <button
-      className="clear-search"
-      onClick={() => setSearchText("")}
-    >
-      <X size={14} />
-    </button>
-  )}
+            <input
+              type="text"
+              placeholder="Search employees, domains, documents..."
+              value={searchText}
+              onChange={(e) =>
+                setSearchText(
+                  e.target.value
+                )
+              }
+            />
+
+            {searchText && (
+              <button
+                className="clear-search"
+                onClick={() =>
+                  setSearchText("")
+                }
+              >
+                <X size={14} />
+              </button>
+            )}
 
           </div>
 
           <div className="topbar-right">
-            
 
             <div className="profile-wrapper">
-  <button
-    className="profile-menu"
-    onClick={() => setShowProfileMenu(!showProfileMenu)}
-  >
-    <div className="topbar-profile">
-  <div className="profile-avatar">
-    {(
-      localStorage.getItem("hirenestEmail") ||
-      sessionStorage.getItem("hirenestEmail") ||
-      "U"
-    )
-      .charAt(0)
-      .toUpperCase()}
-  </div>
 
-  <div>
-    <strong>
-      {localStorage.getItem("hirenestEmail") ||
-        sessionStorage.getItem("hirenestEmail") ||
-        "User"}
-    </strong>
+              <button
+                className="profile-menu"
+                onClick={() =>
+                  setShowProfileMenu(
+                    !showProfileMenu
+                  )
+                }
+              >
 
-    <span>
-      {localStorage.getItem("hirenestRole") ||
-        sessionStorage.getItem("hirenestRole") ||
-        "User"}
-    </span>
-  </div>
-</div>
+                <div className="topbar-profile">
 
-    <ChevronDown size={17} />
-  </button>
+                  <div className="profile-avatar">
 
-  {showProfileMenu && (
-    <div className="profile-dropdown">
-      <button onClick={() => navigate("/profile")}>
-        <UserRound size={15} />
-        My Profile
-      </button>
+                    {userInitial}
 
-      <button onClick={() => navigate("/settings")}>
-        <Settings size={15} />
-        Settings
-      </button>
+                  </div>
 
-      <div className="dropdown-divider"></div>
+                  <div>
 
-      <button
-        className="logout-button"
-        onClick={handleLogout}
-      >
-        <LogOut size={15} />
-        Logout
-      </button>
-    </div>
-  )}
-</div>
+                    <strong>
+                      {userEmail}
+                    </strong>
+
+                    <span>
+                      {userRole}
+                    </span>
+
+                  </div>
+
+                </div>
+
+                <ChevronDown size={17} />
+
+              </button>
+
+              {showProfileMenu && (
+
+                <div className="profile-dropdown">
+
+                  <button
+                    onClick={() =>
+                      navigate(
+                        "/profile"
+                      )
+                    }
+                  >
+                    <UserRound
+                      size={15}
+                    />
+                    My Profile
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      navigate(
+                        "/settings"
+                      )
+                    }
+                  >
+                    <Settings
+                      size={15}
+                    />
+                    Settings
+                  </button>
+
+                  <div className="dropdown-divider"></div>
+
+                  <button
+                    className="logout-button"
+                    onClick={
+                      handleLogout
+                    }
+                  >
+                    <LogOut
+                      size={15}
+                    />
+                    Logout
+                  </button>
+
+                </div>
+
+              )}
+
+            </div>
+
           </div>
+
         </header>
 
-        {/* DASHBOARD CONTENT */}
+        {/* =================================================
+            DASHBOARD CONTENT
+        ================================================= */}
+
         <div className="dashboard-content">
-          {/* WELCOME */}
+
+          {/* =================================================
+              WELCOME
+          ================================================= */}
+
           <section className="welcome-section">
+
             <div>
-              <p className="welcome-small">Good morning,</p>
+
+              <p className="welcome-small">
+                Good morning,
+              </p>
 
               <h1>
-                Gomathi <span>👋</span>
+                {userEmail.split("@")[0]}{" "}
+                <span>👋</span>
               </h1>
 
               <p className="welcome-description">
-                Here's what's happening with your employees today.
+                Here's what's happening
+                with your employees today.
               </p>
+
             </div>
 
             <div className="date-card">
+
               <div className="date-icon">
-                <CalendarDays size={22} />
+                <CalendarDays
+                  size={22}
+                />
               </div>
 
               <div>
-                <strong>Thursday, 01 Oct 2026</strong>
-                <span>Have a productive day!</span>
+
+                <strong>
+                  {new Date().toLocaleDateString(
+                    "en-GB",
+                    {
+                      weekday:
+                        "long",
+                      day: "2-digit",
+                      month:
+                        "short",
+                      year:
+                        "numeric",
+                    }
+                  )}
+                </strong>
+
+                <span>
+                  Have a productive day!
+                </span>
+
               </div>
+
             </div>
+
           </section>
 
-          {/* STAT CARDS */}
+          {/* =================================================
+              ERROR MESSAGE
+          ================================================= */}
+
+          {error && (
+
+            <div
+              style={{
+                background:
+                  "#fff1f2",
+                color: "#b91c1c",
+                border:
+                  "1px solid #fecdd3",
+                borderRadius:
+                  "12px",
+                padding:
+                  "14px 18px",
+                marginBottom:
+                  "20px",
+                fontSize:
+                  "14px",
+              }}
+            >
+
+              {error}
+
+              <button
+                onClick={() =>
+                  window.location.reload()
+                }
+                style={{
+                  marginLeft:
+                    "15px",
+                  border: "none",
+                  background:
+                    "#b91c1c",
+                  color: "#fff",
+                  padding:
+                    "7px 12px",
+                  borderRadius:
+                    "7px",
+                  cursor:
+                    "pointer",
+                }}
+              >
+                Retry
+              </button>
+
+            </div>
+
+          )}
+
+          {/* =================================================
+              LOADING MESSAGE
+          ================================================= */}
+
+          {loading && (
+
+            <div
+              style={{
+                padding:
+                  "12px 0",
+                color:
+                  "#064e3b",
+                fontSize:
+                  "14px",
+              }}
+            >
+              Loading dashboard data...
+            </div>
+
+          )}
+
+          {/* =================================================
+              STAT CARDS
+          ================================================= */}
+
           <section className="stats-grid">
+
             <StatCard
               icon={Users}
               title="Total Employees"
-              value="128"
-              change="12%"
-              subtitle="+14 from last month"
+              value={totalEmployees}
+              change=""
+              subtitle="From backend"
               type="green"
             />
 
             <StatCard
               icon={UserRound}
               title="Total Interns"
-              value="16"
-              change="8%"
-              subtitle="+3 from last month"
+              value={totalInterns}
+              change=""
+              subtitle="From backend"
               type="blue"
             />
 
             <StatCard
               icon={BriefcaseBusiness}
               title="Full-Time Employees"
-              value="112"
-              change="7%"
-              subtitle="+8 from last month"
+              value={
+                fullTimeEmployees
+              }
+              change=""
+              subtitle="From backend"
               type="orange"
             />
 
             <StatCard
               icon={Building2}
               title="Total Domains"
-              value="8"
-              change="0%"
-              subtitle="No change"
+              value={totalDomains}
+              change=""
+              subtitle="From backend"
               type="purple"
             />
+
           </section>
 
-          {/* CHART SECTION */}
+          {/* =================================================
+              CHART SECTION
+          ================================================= */}
+
           <section className="charts-grid">
+
             {/* EMPLOYEES BY DOMAIN */}
+
             <div className="dashboard-card domain-card">
+
               <div className="card-header">
-                <h2>Employees by Domain</h2>
+
+                <h2>
+                  Employees by Domain
+                </h2>
 
                 <select
-  className="period-button"
-  value={period}
-  onChange={(e) => setPeriod(e.target.value)}
->
-  <option>This Month</option>
-  <option>This Week</option>
-  <option>Last Month</option>
-  <option>This Year</option>
-</select>
+                  className="period-button"
+                  value={period}
+                  onChange={(e) =>
+                    setPeriod(
+                      e.target.value
+                    )
+                  }
+                >
+
+                  <option>
+                    This Month
+                  </option>
+
+                  <option>
+                    This Week
+                  </option>
+
+                  <option>
+                    Last Month
+                  </option>
+
+                  <option>
+                    This Year
+                  </option>
+
+                </select>
+
               </div>
 
               <div className="domain-content">
+
                 <div className="donut-wrapper">
+
                   <div className="donut-chart">
+
                     <div className="donut-center">
-                      <strong>128</strong>
-                      <span>Employees</span>
+
+                      <strong>
+                        {totalEmployees}
+                      </strong>
+
+                      <span>
+                        Employees
+                      </span>
+
                     </div>
+
                   </div>
+
                 </div>
 
                 <div className="domain-list">
-                  {domainData.map((domain) => (
-                    <div className="domain-row" key={domain.name}>
-                      <div className="domain-name">
-                        <span
-                          className={`domain-dot ${domain.className}`}
-                        ></span>
 
-                        <span>{domain.name}</span>
-                      </div>
+                  {domainData.length > 0 ? (
 
-                      <strong>{domain.value}</strong>
+                    domainData.map(
+                      (domain) => (
 
-                      <span className="domain-percentage">
-                        {domain.percentage}%
-                      </span>
+                        <div
+                          className="domain-row"
+                          key={
+                            domain.name
+                          }
+                        >
+
+                          <div className="domain-name">
+
+                            <span
+                              className={`domain-dot ${domain.className}`}
+                            ></span>
+
+                            <span>
+                              {
+                                domain.name
+                              }
+                            </span>
+
+                          </div>
+
+                          <strong>
+                            {
+                              domain.value
+                            }
+                          </strong>
+
+                          <span className="domain-percentage">
+                            {
+                              domain.percentage
+                            }%
+                          </span>
+
+                        </div>
+
+                      )
+                    )
+
+                  ) : (
+
+                    <div
+                      style={{
+                        padding:
+                          "20px",
+                        color:
+                          "#64748b",
+                        fontSize:
+                          "14px",
+                      }}
+                    >
+                      No domain data
+                      available.
                     </div>
-                  ))}
+
+                  )}
+
                 </div>
+
               </div>
+
             </div>
 
             {/* PROBATION */}
+
             <div className="dashboard-card probation-card">
+
               <div className="card-header">
-                <h2>Probation Status</h2>
+
+                <h2>
+                  Probation Status
+                </h2>
 
                 <button className="period-button">
+
                   This Month
-                  <ChevronDown size={14} />
+
+                  <ChevronDown
+                    size={14}
+                  />
+
                 </button>
+
               </div>
 
               <div className="bar-chart">
-                {probationData.map((item) => (
-                  <div className="bar-column" key={item.label}>
-                    <strong>{item.value}</strong>
 
-                    <div className="bar-area">
-                      <div
-                        className={`bar ${item.className}`}
-                        style={{
-                          height: `${(item.value / 40) * 100}%`,
-                        }}
-                      ></div>
+                {probationData.map(
+                  (item) => (
+
+                    <div
+                      className="bar-column"
+                      key={
+                        item.label
+                      }
+                    >
+
+                      <strong>
+                        {
+                          item.value
+                        }
+                      </strong>
+
+                      <div className="bar-area">
+
+                        <div
+                          className={`bar ${item.className}`}
+                          style={{
+                            height: `${
+                              (item.value /
+                                probationMaximum) *
+                              100
+                            }%`,
+                          }}
+                        ></div>
+
+                      </div>
+
+                      <span>
+                        {
+                          item.label
+                        }
+                      </span>
+
                     </div>
 
-                    <span>{item.label}</span>
-                  </div>
-                ))}
+                  )
+                )}
+
               </div>
+
             </div>
+
           </section>
 
-          {/* TABLE SECTION */}
+          {/* =================================================
+              TABLE SECTION
+          ================================================= */}
+
           <section className="tables-grid">
+
             {/* RECENT EMPLOYEES */}
+
             <div className="dashboard-card table-card">
+
               <div className="card-header">
-                <h2>Recently Joined Employees</h2>
+
+                <h2>
+                  Recently Joined Employees
+                </h2>
 
                 <button
-  className="view-all"
-  onClick={() => navigate("/employees")}
->
-  View All
-</button>
+                  className="view-all"
+                  onClick={() =>
+                    navigate(
+                      "/employees"
+                    )
+                  }
+                >
+                  View All
+                </button>
+
               </div>
 
               <div className="table-wrapper">
+
                 <table>
+
                   <thead>
+
                     <tr>
+
                       <th>ID</th>
                       <th>Name</th>
                       <th>Domain</th>
                       <th>Join Date</th>
-                      <th>Status</th>
+                      <th>Employment Type</th>
+
                     </tr>
+
                   </thead>
 
                   <tbody>
-                    {recentEmployees.map((employee) => (
-                      <tr key={employee.id}>
-                        <td>
-                          <div className="employee-id">
-                            <span className="employee-avatar">
-                              {employee.avatar}
-                            </span>
 
-                            {employee.id}
-                          </div>
+                    {recentEmployees.length > 0 ? (
+
+                      recentEmployees.map(
+                        (employee) => (
+
+                          <tr
+                            key={
+                              employee.employeeId
+                            }
+                          >
+
+                            <td>
+
+                              <div className="employee-id">
+
+                                <span className="employee-avatar">
+                                  {(
+                                    employee.fullName ||
+                                    "U"
+                                  )
+                                    .charAt(
+                                      0
+                                    )
+                                    .toUpperCase()}
+                                </span>
+
+                                {
+                                  employee.employeeCode ||
+                                  "-"
+                                }
+
+                              </div>
+
+                            </td>
+
+                            <td>
+                              {
+                                employee.fullName ||
+                                "-"
+                              }
+                            </td>
+
+                            <td>
+                              {
+                                employee.domainName ||
+                                "-"
+                              }
+                            </td>
+
+                            <td>
+                              {formatDate(
+                                employee.joiningDate
+                              )}
+                            </td>
+
+                            <td>
+                              <StatusBadge
+                                status={
+                                  employee.employmentType ||
+                                  "-"
+                                }
+                              />
+                            </td>
+
+                          </tr>
+
+                        )
+                      )
+
+                    ) : (
+
+                      <tr>
+
+                        <td
+                          colSpan="5"
+                          style={{
+                            textAlign:
+                              "center",
+                            padding:
+                              "30px",
+                            color:
+                              "#64748b",
+                          }}
+                        >
+                          No recently
+                          joined employees
+                          found.
                         </td>
 
-                        <td>{employee.name}</td>
-
-                        <td>{employee.domain}</td>
-
-                        <td>{employee.joiningDate}</td>
-
-                        <td>
-                          <StatusBadge status={employee.status} />
-                        </td>
                       </tr>
-                    ))}
+
+                    )}
+
                   </tbody>
+
                 </table>
+
               </div>
+
             </div>
 
             {/* RECENT RECORDS */}
+
             <div className="dashboard-card table-card records-card">
+
               <div className="card-header">
-                <h2>Recent Records</h2>
+
+                <h2>
+                  Recent Records
+                </h2>
 
                 <button
-  className="view-all"
-  onClick={() => navigate("/reports")}
->
-  View All
-</button>
+                  className="view-all"
+                  onClick={() =>
+                    navigate(
+                      "/reports"
+                    )
+                  }
+                >
+                  View All
+                </button>
+
               </div>
 
               <div className="records-list">
-                {recentRecords.map((record) => {
-                  const Icon = record.icon;
 
-                  return (
-                    <div className="record-item" key={record.id}>
-                      <div className={`record-icon ${record.className}`}>
-                        <Icon size={16} />
-                      </div>
+                {recentRecords.length > 0 ? (
 
-                      <div className="record-info">
-                        <strong>{record.title}</strong>
-                        <span>
-                          {record.id} · {record.description}
-                        </span>
-                      </div>
+                  recentRecords.map(
+                    (record) => {
 
-                      <span className="record-time">{record.time}</span>
-                    </div>
-                  );
-                })}
+                      const Icon =
+                        record.icon;
+
+                      return (
+
+                        <div
+                          className="record-item"
+                          key={`${record.id}-${record.time}`}
+                        >
+
+                          <div
+                            className={`record-icon ${record.className}`}
+                          >
+                            <Icon
+                              size={16}
+                            />
+                          </div>
+
+                          <div className="record-info">
+
+                            <strong>
+                              {
+                                record.title
+                              }
+                            </strong>
+
+                            <span>
+                              {
+                                record.id
+                              }{" "}
+                              ·{" "}
+                              {
+                                record.description
+                              }
+                            </span>
+
+                          </div>
+
+                          <span className="record-time">
+                            {
+                              record.time
+                            }
+                          </span>
+
+                        </div>
+
+                      );
+                    }
+                  )
+
+                ) : (
+
+                  <div
+                    style={{
+                      padding:
+                        "30px 20px",
+                      textAlign:
+                        "center",
+                      color:
+                        "#64748b",
+                      fontSize:
+                        "14px",
+                    }}
+                  >
+                    No recent records
+                    available.
+                  </div>
+
+                )}
+
               </div>
+
             </div>
+
           </section>
+
         </div>
+
       </main>
+
     </div>
   );
 }
