@@ -3,7 +3,6 @@
    COMPLETE DASHBOARD CSS
 ========================================================= */
 
-
 /* =========================================================
    GLOBAL RESET
 ========================================================= */
@@ -39,7 +38,6 @@ body {
   color: #123c35;
 }
 
-
 /* =========================================================
    DASHBOARD PAGE
 ========================================================= */
@@ -52,7 +50,6 @@ body {
 
   overflow: hidden;
 }
-
 
 /* =========================================================
    SIDEBAR
@@ -94,6 +91,7 @@ body {
 .sidebar::-webkit-scrollbar {
   display: none;
 }
+
 /* =========================================================
    BRAND
 ========================================================= */
@@ -157,7 +155,6 @@ body {
 
   letter-spacing: 0.9px;
 }
-
 
 /* =========================================================
    SIDEBAR NAVIGATION
@@ -224,7 +221,6 @@ body {
 .nav-item svg {
   flex-shrink: 0;
 }
-
 
 /* =========================================================
    SIDEBAR BOTTOM CARD
@@ -314,11 +310,8 @@ body {
   transform: rotate(10deg);
 }
 
-
 /* =========================================================
    MAIN CONTENT
-   FIXED BESIDE SIDEBAR
-   ONLY THIS AREA SCROLLS
 ========================================================= */
 
 .main-content {
@@ -361,7 +354,6 @@ body {
   background: #7fa99c;
 }
 
-
 /* =========================================================
    TOPBAR
 ========================================================= */
@@ -386,7 +378,6 @@ body {
 
   backdrop-filter: blur(10px);
 }
-
 
 /* =========================================================
    SEARCH
@@ -414,6 +405,8 @@ body {
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
+
+  position: relative;
 }
 
 .search-box:focus-within {
@@ -457,6 +450,123 @@ body {
   cursor: pointer;
 }
 
+/* =========================================================
+   SEARCH RESULTS
+========================================================= */
+
+.search-results-dropdown {
+  position: absolute;
+
+  top: 48px;
+  left: 0;
+
+  width: 350px;
+
+  max-height: 350px;
+
+  overflow-y: auto;
+
+  background: #ffffff;
+
+  border: 1px solid #dce8e4;
+
+  border-radius: 12px;
+
+  box-shadow:
+    0 15px 35px rgba(15, 61, 51, 0.14);
+
+  z-index: 2000;
+}
+
+.search-result-section {
+  padding: 8px;
+}
+
+.search-result-title {
+  padding: 7px 10px;
+
+  color: #7b8f8a;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.5px;
+}
+
+.search-result-item {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 9px 10px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background: transparent;
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.search-result-item:hover {
+  background: #f2f8f6;
+}
+
+.search-result-avatar {
+  width: 32px;
+  height: 32px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 8px;
+
+  background: #e3f4ee;
+
+  color: #087054;
+
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.search-result-item strong {
+  display: block;
+
+  color: #294b42;
+
+  font-size: 11px;
+}
+
+.search-result-item span {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #8a9995;
+
+  font-size: 9px;
+}
+
+.search-no-result {
+  padding: 25px 15px;
+
+  color: #82938e;
+
+  font-size: 11px;
+
+  text-align: center;
+}
 
 /* =========================================================
    TOPBAR RIGHT
@@ -543,7 +653,6 @@ body {
   text-transform: uppercase;
 }
 
-
 /* =========================================================
    PROFILE DROPDOWN
 ========================================================= */
@@ -612,7 +721,6 @@ body {
   background: #edf1ef;
 }
 
-
 /* =========================================================
    DASHBOARD CONTENT
 ========================================================= */
@@ -637,7 +745,6 @@ body {
     transform: translateY(0);
   }
 }
-
 
 /* =========================================================
    WELCOME SECTION
@@ -684,7 +791,6 @@ body {
 
   font-size: 11px;
 }
-
 
 /* =========================================================
    DATE CARD
@@ -744,7 +850,6 @@ body {
 
   font-size: 9px;
 }
-
 
 /* =========================================================
    STAT CARDS
@@ -859,7 +964,6 @@ body {
   font-size: 8px;
 }
 
-
 /* =========================================================
    DASHBOARD CARDS
 ========================================================= */
@@ -874,9 +978,8 @@ body {
   box-shadow:
     0 3px 12px rgba(24, 70, 60, 0.035);
 
-  overflow: hidden;
+  overflow: visible;
 }
-
 
 /* =========================================================
    CHART GRID
@@ -892,7 +995,6 @@ body {
 
   margin-bottom: 12px;
 }
-
 
 /* =========================================================
    CARD HEADER
@@ -950,7 +1052,6 @@ body {
 
   border-color: #a9c9bf;
 }
-
 
 /* =========================================================
    EMPLOYEES BY DOMAIN
@@ -1148,14 +1249,93 @@ body {
   text-align: right;
 }
 
-
 /* =========================================================
    PROBATION
 ========================================================= */
 
 .probation-card {
   min-height: 260px;
+
+  overflow: visible;
 }
+
+/* =========================================================
+   PROBATION HEADER
+========================================================= */
+
+.probation-card .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  position: relative;
+
+  z-index: 20;
+}
+
+/* =========================================================
+   PROBATION SELECT
+========================================================= */
+
+.probation-select {
+  width: 130px;
+  height: 32px;
+
+  padding: 0 28px 0 10px;
+
+  border: 1px solid #dce7e3;
+
+  border-radius: 7px;
+
+  background: #ffffff;
+
+  color: #526b64;
+
+  font-family: inherit;
+
+  font-size: 9px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  outline: none;
+
+  position: relative;
+
+  z-index: 100;
+
+  appearance: auto;
+  -webkit-appearance: auto;
+  -moz-appearance: auto;
+}
+
+.probation-select:hover {
+  background: #f7fbf9;
+
+  border-color: #a9c9bf;
+}
+
+.probation-select:focus {
+  border-color: #1d8b6f;
+
+  box-shadow:
+    0 0 0 3px rgba(29, 139, 111, 0.08);
+}
+
+.probation-select option {
+  background: #ffffff;
+
+  color: #526b64;
+
+  font-family: inherit;
+
+  font-size: 10px;
+  font-weight: 500;
+}
+
+/* =========================================================
+   PROBATION BAR CHART
+========================================================= */
 
 .bar-chart {
   height: 200px;
@@ -1192,6 +1372,7 @@ body {
 
 .bar-area {
   width: 100%;
+
   max-width: 42px;
 
   height: 115px;
@@ -1240,7 +1421,6 @@ body {
   white-space: nowrap;
 }
 
-
 /* =========================================================
    TABLE GRID
 ========================================================= */
@@ -1259,7 +1439,6 @@ body {
 
   min-height: 250px;
 }
-
 
 /* =========================================================
    TABLE
@@ -1342,7 +1521,6 @@ body {
   background: #f8fbfa;
 }
 
-
 /* =========================================================
    TABLE COLUMN WIDTHS
 ========================================================= */
@@ -1371,7 +1549,6 @@ body {
 .table-wrapper td:nth-child(5) {
   width: 125px;
 }
-
 
 /* =========================================================
    EMPLOYEE ID
@@ -1408,7 +1585,6 @@ body {
   font-weight: 800;
 }
 
-
 /* =========================================================
    STATUS BADGE
 ========================================================= */
@@ -1442,7 +1618,6 @@ body {
   color: #b97408;
 }
 
-
 /* =========================================================
    VIEW ALL
 ========================================================= */
@@ -1467,7 +1642,6 @@ body {
 
   text-decoration: underline;
 }
-
 
 /* =========================================================
    RECENT RECORDS
@@ -1610,7 +1784,6 @@ body {
   font-size: 8px;
 }
 
-
 /* =========================================================
    EMPTY STATES
 ========================================================= */
@@ -1638,13 +1811,11 @@ body {
   text-align: center;
 }
 
-
 /* =========================================================
    RESPONSIVE - 1200PX
 ========================================================= */
 
 @media (max-width: 1200px) {
-
   .sidebar {
     width: 200px;
   }
@@ -1668,15 +1839,17 @@ body {
   .search-box {
     width: 280px;
   }
-}
 
+  .search-results-dropdown {
+    width: 280px;
+  }
+}
 
 /* =========================================================
    RESPONSIVE - 900PX
 ========================================================= */
 
 @media (max-width: 900px) {
-
   .sidebar {
     width: 72px;
 
@@ -1729,15 +1902,18 @@ body {
   .date-card {
     min-width: 190px;
   }
-}
 
+  .search-results-dropdown {
+    left: 0;
+    width: 280px;
+  }
+}
 
 /* =========================================================
    RESPONSIVE - 650PX
 ========================================================= */
 
 @media (max-width: 650px) {
-
   .main-content {
     left: 0;
 
@@ -1760,6 +1936,10 @@ body {
   }
 
   .search-box {
+    width: 180px;
+  }
+
+  .search-results-dropdown {
     width: 180px;
   }
 
@@ -1798,8 +1978,12 @@ body {
     padding-left: 15px;
     padding-right: 15px;
   }
-}
 
+  .probation-select {
+    width: 115px;
+    font-size: 8px;
+  }
+}
 
 /* =========================================================
    SELECTION
@@ -1809,4 +1993,422 @@ body {
   background: #bde9da;
 
   color: #0c4e06;
+}
+/* =========================================
+   HIRENEST SHARED LAYOUT FIX
+   Paste at the bottom of Dashboard/index.css
+========================================= */
+
+/* Keep the Dashboard inside the available content area */
+.dashboard-page {
+  position: relative !important;
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  min-height: 100vh !important;
+  height: auto !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  background: #eef6f3 !important;
+  box-sizing: border-box !important;
+}
+
+/* Use the sidebar provided by the shared Layout */
+.dashboard-page > .sidebar {
+  display: none !important;
+}
+
+/* Remove the old fixed positioning and left offset */
+.dashboard-page > .main-content {
+  position: relative !important;
+  inset: auto !important;
+  left: auto !important;
+  right: auto !important;
+  top: auto !important;
+  bottom: auto !important;
+
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 100vh !important;
+
+  margin: 0 !important;
+  padding: 0 20px 32px !important;
+
+  overflow-x: clip !important;
+  overflow-y: visible !important;
+  box-sizing: border-box !important;
+
+  background: #eef6f3 !important;
+}
+
+/* Keep the topbar within the available width */
+.dashboard-page .topbar {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Make search responsive */
+.dashboard-page .search-box {
+  width: min(350px, 100%) !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+.dashboard-page .search-results-dropdown {
+  width: min(350px, 100%) !important;
+  max-width: 100% !important;
+}
+
+/* Prevent dashboard cards and charts from forcing overflow */
+.dashboard-page .stats-grid,
+.dashboard-page .charts-grid,
+.dashboard-page .tables-grid {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.dashboard-page .stats-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+.dashboard-page .charts-grid,
+.dashboard-page .tables-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.dashboard-page .stat-card,
+.dashboard-page .dashboard-card {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Prevent wide chart/table content from expanding the page */
+.dashboard-page .dashboard-card {
+  overflow: hidden;
+}
+
+.dashboard-page table {
+  max-width: 100%;
+}
+
+.dashboard-page img,
+.dashboard-page canvas,
+.dashboard-page svg {
+  max-width: 100%;
+}
+
+/* Tablet */
+@media (max-width: 1100px) {
+  .dashboard-page .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .dashboard-page .charts-grid,
+  .dashboard-page .tables-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 800px) {
+  .dashboard-page .charts-grid,
+  .dashboard-page .tables-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .dashboard-page > .main-content {
+    padding: 0 12px 24px !important;
+  }
+
+  .dashboard-page .stats-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+
+/* Welcome Greeting */
+.welcome-small {
+  font-size: 15px;
+  font-weight: 500;
+  color: #64748b;
+  margin-bottom: 12px;
+  letter-spacing: 0.2px;
+}
+
+.welcome-small strong {
+  color: #064e3b;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.7px;
+  margin-left: 5px;
+}
+
+/* Logged-in Role */
+.welcome-description:first-of-type {
+  font-size: 12px;
+  font-weight: 700;
+  color: #065f46;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+/* Supporting Text */
+.welcome-description:last-of-type {
+  font-size: 14px;
+  font-weight: 400;
+  color: #64748b;
+  line-height: 1.7;
+  margin-top: 8px;
+}
+
+
+
+/* ===== PREMIUM WELCOME BANNER ===== */
+
+.welcome-banner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 25px 28px;
+  margin: 18px 0 20px;
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 5% 0%,
+      rgba(16, 185, 129, 0.09),
+      transparent 42%
+    ),
+    linear-gradient(110deg, #ffffff 0%, #f4faf7 100%);
+
+  border: 1px solid #dcebe4;
+  border-radius: 18px;
+  box-shadow: 0 5px 18px rgba(6, 78, 59, 0.035);
+}
+
+.welcome-banner::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    #10b981,
+    #047857
+  );
+}
+
+.welcome-banner-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.welcome-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 12px;
+
+  color: #647b72;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1.35px;
+}
+
+.welcome-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 3px #dff7eb;
+}
+
+.welcome-greeting {
+  margin: 0 0 2px;
+  color: #647b72;
+  font-size: 15px;
+  font-weight: 450;
+  line-height: 1.5;
+}
+
+.welcome-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  margin: 0 0 11px;
+  color: #064e3b;
+  font-size: clamp(27px, 2.4vw, 34px);
+  font-weight: 750;
+  line-height: 1.2;
+  letter-spacing: -1.1px;
+}
+
+.welcome-hand-icon {
+  flex-shrink: 0;
+  color: #0d9488;
+  stroke-width: 1.8;
+}
+
+.welcome-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.welcome-role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+
+  color: #047857;
+  background: #e6f6ee;
+  border: 1px solid #cdebdc;
+  border-radius: 7px;
+
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.65px;
+}
+
+.welcome-meta-divider {
+  width: 1px;
+  height: 17px;
+  background: #d6e4dd;
+}
+
+.welcome-meta p {
+  margin: 0;
+  color: #71847b;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* ===== DATE CARD ===== */
+
+.welcome-date-card {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  flex-shrink: 0;
+
+  min-width: 205px;
+  padding: 15px 17px;
+  box-sizing: border-box;
+
+  background: #ffffff;
+  border: 1px solid #e0ece6;
+  border-radius: 13px;
+  box-shadow: 0 3px 10px rgba(6, 78, 59, 0.025);
+}
+
+.welcome-date-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 43px;
+  height: 43px;
+  flex-shrink: 0;
+
+  color: #047857;
+  background: #e7f6ee;
+  border-radius: 12px;
+}
+
+.welcome-date-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  min-width: 0;
+}
+
+.welcome-date-label {
+  color: #81938a;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 1.2px;
+}
+
+.welcome-date-info strong {
+  color: #17352e;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.welcome-date-message {
+  color: #81938a;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 900px) {
+  .welcome-banner {
+    padding: 22px;
+    gap: 16px;
+  }
+
+  .welcome-date-card {
+    min-width: 185px;
+    padding: 12px;
+  }
+
+  .welcome-meta p {
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .welcome-banner {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 21px 18px;
+    gap: 19px;
+    margin: 14px 0 18px;
+  }
+
+  .welcome-heading {
+    font-size: 27px;
+  }
+
+  .welcome-meta {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .welcome-meta-divider {
+    display: none;
+  }
+
+  .welcome-meta p {
+    flex-basis: 100%;
+  }
+
+  .welcome-date-card {
+    width: 100%;
+    min-width: 0;
+  }
 }

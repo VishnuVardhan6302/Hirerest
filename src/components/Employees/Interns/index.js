@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Search,
@@ -6,17 +7,11 @@ import {
   Eye,
   Pencil,
   Trash2,
-  Home,
-  Layers3,
-  Clock3,
-  FileText,
-  BarChart3,
-  UserCircle,
-  Settings,
-  UserRound,
+  Plus,
 } from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
 import "./index.css";
+
+const API_BASE_URL = "http://localhost:8080";
 
 const Interns = () => {
   const navigate = useNavigate();
@@ -24,46 +19,84 @@ const Interns = () => {
 
   const [interns, setInterns] = useState([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // Load interns from mock employee data
-  const loadInterns = () => {
+  // Get authentication token
+  const getToken = () =>
+    localStorage.getItem("hirenestToken") ||
+    localStorage.getItem("token") ||
+    sessionStorage.getItem("hirenestToken") ||
+    sessionStorage.getItem("token");
+
+  // Load interns from backend
+  const loadInterns = useCallback(async () => {
     try {
-      const storedEmployees =
-        JSON.parse(localStorage.getItem("mockEmployees")) || [];
+      setLoading(true);
+      setError("");
 
-      const internEmployees = storedEmployees.filter(
+      const token = getToken();
+
+      if (!token) {
+        setInterns([]);
+        setError("Please log in again to view interns.");
+        return;
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/employees/interns`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to load interns. Status: ${response.status}`
+        );
+      }
+
+      const data = await response.json();
+
+      const employees = Array.isArray(data)
+        ? data
+        : Array.isArray(data.data)
+        ? data.data
+        : Array.isArray(data.content)
+        ? data.content
+        : [];
+
+      const internEmployees = employees.filter(
         (employee) =>
-          String(employee.employmentType || "").toUpperCase() === "INTERN"
+          String(employee.employmentType || "").toUpperCase() ===
+            "INTERN" &&
+          String(employee.status || "ACTIVE").toUpperCase() !==
+            "FORMER"
       );
 
       setInterns(internEmployees);
-    } catch (error) {
-      console.error("Error loading interns:", error);
+    } catch (err) {
+      console.error("Error loading interns:", err);
+      setError(err.message || "Unable to load interns.");
       setInterns([]);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadInterns();
-
-    const handleStorageChange = () => {
-      loadInterns();
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, [location.pathname]);
+  }, [loadInterns, location.pathname]);
 
   // Search interns
   const filteredInterns = interns.filter((employee) => {
     const searchText = search.toLowerCase().trim();
 
-    if (!searchText) {
-      return true;
-    }
+    if (!searchText) return true;
 
     return (
       String(employee.employeeId || "")
@@ -84,6 +117,7 @@ const Interns = () => {
     );
   });
 
+  // View intern
   const handleView = (employee) => {
     navigate(`/employees/${employee.id}`, {
       state: {
@@ -93,396 +127,309 @@ const Interns = () => {
     });
   };
 
+  // Edit intern
   const handleEdit = (employee) => {
     navigate(`/employees/${employee.id}/edit`);
   };
 
-  const handleDelete = (id) => {
-    const confirmDelete = window.confirm(
+  // Move intern to Former Employees
+  const handleDelete = async (id) => {
+    const confirmed = window.confirm(
       "Are you sure you want to move this intern to Former Employees?"
     );
 
-    if (!confirmDelete) {
-      return;
-    }
+    if (!confirmed) return;
 
     try {
-      const employees =
-        JSON.parse(localStorage.getItem("mockEmployees")) || [];
+      setError("");
 
-      const employeeToMove = employees.find(
-        (employee) => employee.id === id
-      );
+      const token = getToken();
 
-      if (!employeeToMove) {
-        return;
+      if (!token) {
+        throw new Error("Session expired. Please log in again.");
       }
 
-      const updatedEmployees = employees.filter(
-        (employee) => employee.id !== id
-      );
-
-      const formerEmployees =
-        JSON.parse(localStorage.getItem("mockFormerEmployees")) || [];
-
-      const updatedFormerEmployees = [
-        ...formerEmployees,
+      // Fetch current employee details
+      const getResponse = await fetch(
+        `${API_BASE_URL}/api/employees/${id}`,
         {
-          ...employeeToMove,
-          status: "FORMER",
-        },
-      ];
-
-      localStorage.setItem(
-        "mockEmployees",
-        JSON.stringify(updatedEmployees)
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
 
-      localStorage.setItem(
-        "mockFormerEmployees",
-        JSON.stringify(updatedFormerEmployees)
+      if (!getResponse.ok) {
+        throw new Error(
+          `Failed to fetch intern details: ${getResponse.status}`
+        );
+      }
+
+      const data = await getResponse.json();
+
+      const employee = Array.isArray(data)
+        ? data.find((item) => String(item.id) === String(id))
+        : data;
+
+      if (!employee || String(employee.id) !== String(id)) {
+        throw new Error("Intern not found.");
+      }
+
+      // Preserve existing employee details
+      const updatePayload = {
+        employeeId: employee.employeeId || "",
+        fullName: employee.fullName || "",
+        email: employee.email || "",
+        phone: employee.phone || "",
+        dateOfBirth: employee.dateOfBirth || null,
+        residentialAddress: employee.residentialAddress || "",
+        permanentAddress: employee.permanentAddress || "",
+        emergencyContactName: employee.emergencyContactName || "",
+        emergencyContactPhone: employee.emergencyContactPhone || "",
+        domainName: employee.domainName || employee.domain || "",
+        employmentType: employee.employmentType || "INTERN",
+        joiningDate: employee.joiningDate || null,
+        status: "FORMER",
+      };
+
+      const updateResponse = await fetch(
+        `${API_BASE_URL}/api/employees/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatePayload),
+        }
       );
 
-      setInterns(
-        updatedEmployees.filter(
-          (employee) =>
-            String(employee.employmentType || "").toUpperCase() === "INTERN"
+      if (!updateResponse.ok) {
+        const message = await updateResponse.text();
+
+        throw new Error(
+          message || `Failed to update intern: ${updateResponse.status}`
+        );
+      }
+
+      setInterns((currentInterns) =>
+        currentInterns.filter(
+          (item) => String(item.id) !== String(id)
         )
       );
 
-      alert("Intern moved to Former Employees.");
-    } catch (error) {
-      console.error("Delete intern error:", error);
-      alert("Unable to move intern.");
+      window.alert("Intern moved to Former Employees successfully.");
+    } catch (err) {
+      console.error("Move intern error:", err);
+      window.alert(err.message || "Unable to move intern.");
     }
   };
 
-  const navigationItems = [
-    {
-      label: "Dashboard",
-      icon: Home,
-      path: "/dashboard",
-    },
-    {
-      label: "Employees",
-      icon: Users,
-      path: "/employees",
-    },
-    {
-      label: "Domains",
-      icon: Layers3,
-      path: "/domains",
-    },
-    {
-      label: "Probation",
-      icon: Clock3,
-      path: "/probation",
-    },
-    {
-      label: "Documents",
-      icon: FileText,
-      path: "/documents",
-    },
-    {
-      label: "Reports",
-      icon: BarChart3,
-      path: "/reports",
-    },
-    {
-      label: "Users",
-      icon: UserCircle,
-      path: "/users",
-    },
-    {
-      label: "Profile",
-      icon: UserRound,
-      path: "/profile",
-    },
-    {
-      label: "Settings",
-      icon: Settings,
-      path: "/settings",
-    },
-  ];
-
-  const handleNavigation = (path) => {
-    navigate(path);
-  };
-
   return (
-    <div className="interns-page">
-      {/* Sidebar */}
-      <aside className="sidebar">
-        <div className="brand">
-          <div className="brand-logo">H</div>
+    <div className="interns-page-content">
+      <main className="interns-content">
+        {/* Back navigation */}
+        <button
+          type="button"
+          className="back-dashboard"
+          onClick={() => navigate("/employees")}
+        >
+          <ArrowLeft size={17} />
+          Back to Employees
+        </button>
 
-          <div className="brand-text">
-            <h2>HireNest</h2>
-            <span>EMPLOYEE MANAGEMENT</span>
+        {/* Page heading and actions */}
+        <div className="page-heading">
+          <div>
+            <h1>Interns</h1>
+            <p>Manage and view all current interns</p>
+          </div>
+
+          <div className="page-actions">
+            <button
+              type="button"
+              className="secondary-action"
+              onClick={() => navigate("/employees")}
+            >
+              <Users size={16} />
+              All Employees
+            </button>
+
+            <button
+              type="button"
+              className="secondary-action"
+              onClick={() => navigate("/former-employees")}
+            >
+              Former Employees
+            </button>
+
+            <button
+              type="button"
+              className="primary-action"
+              onClick={() => navigate("/employees/add")}
+            >
+              <Plus size={16} />
+              Add Employee
+            </button>
           </div>
         </div>
 
-        <nav className="sidebar-nav">
-          {navigationItems.map((item) => {
-            const Icon = item.icon;
-
-            const isActive =
-              location.pathname === item.path ||
-              (item.path === "/employees" &&
-                location.pathname.startsWith("/employees"));
-
-            return (
-              <button
-                key={item.label}
-                className={`nav-item ${isActive ? "active" : ""}`}
-                onClick={() => handleNavigation(item.path)}
-              >
-                <Icon size={19} strokeWidth={2} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-
-        <div className="sidebar-bottom-card">
-          <div className="plant-decoration">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-
-          <h3>Build a Better Workplace</h3>
-
-          <p>Manage your team efficiently with Hirenest.</p>
-        </div>
-      </aside>
-
-      {/* Main Area */}
-      <div className="interns-main">
-        {/* Topbar */}
-        <header className="topbar">
-          <div className="top-search">
-            <Search size={18} />
-
-            <input
-              type="text"
-              placeholder="Search employees..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
-          <div className="profile-area">
-            <div className="profile-avatar">G</div>
-
-            <div className="profile-info">
-              <strong>Gomathi</strong>
-              <span>HR</span>
-            </div>
-          </div>
-        </header>
-
-        {/* Content */}
-        <main className="interns-content">
-          <button
-            className="back-dashboard"
-            onClick={() => navigate("/employees")}
-          >
-            <ArrowLeft size={17} />
-            Back to Employees
-          </button>
-
-          <div className="page-heading">
+        {/* Intern table */}
+        <section className="interns-card">
+          <div className="card-header">
             <div>
-              <h1>Interns</h1>
-
+              <h2>Intern List</h2>
               <p>
-                Manage and view all current interns
+                {filteredInterns.length}{" "}
+                {filteredInterns.length === 1 ? "intern" : "interns"}
               </p>
             </div>
 
-            <div className="page-actions">
-              <button
-                className="secondary-action"
-                onClick={() => navigate("/employees")}
-              >
-                <Users size={16} />
-                All Employees
-              </button>
+            <div className="table-search">
+              <Search size={17} />
 
-              <button
-                className="secondary-action"
-                onClick={() => navigate("/former-employees")}
-              >
-                Former Employees
-              </button>
-
-              <button
-                className="primary-action"
-                onClick={() => navigate("/employees/add")}
-              >
-                <span className="plus-icon">+</span>
-                Add Employee
-              </button>
+              <input
+                type="text"
+                placeholder="Search intern..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
             </div>
           </div>
 
-          {/* Table Card */}
-          <section className="interns-card">
-            <div className="card-header">
-              <div>
-                <h2>Intern List</h2>
+          {error && (
+            <div className="interns-error" role="alert">
+              <span>{error}</span>
 
-                <p>
-                  {filteredInterns.length}{" "}
-                  {filteredInterns.length === 1
-                    ? "intern"
-                    : "interns"}
-                </p>
-              </div>
-
-              <div className="table-search">
-                <Search size={17} />
-
-                <input
-                  type="text"
-                  placeholder="Search intern..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
+              <button type="button" onClick={loadInterns}>
+                Retry
+              </button>
             </div>
+          )}
 
-            {filteredInterns.length > 0 ? (
-              <div className="table-wrapper">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Employee ID</th>
-                      <th>Intern</th>
-                      <th>Email</th>
-                      <th>Domain</th>
-                      <th>Employment Type</th>
-                      <th>Joining Date</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
+          {loading ? (
+            <div className="interns-loading">
+              Loading interns...
+            </div>
+          ) : filteredInterns.length > 0 ? (
+            <div className="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Employee ID</th>
+                    <th>Intern</th>
+                    <th>Email</th>
+                    <th>Domain</th>
+                    <th>Employment Type</th>
+                    <th>Joining Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
 
-                  <tbody>
-                    {filteredInterns.map((employee) => (
-                      <tr key={employee.id}>
-                        <td>
-                          <strong className="employee-id">
-                            {employee.employeeId || "-"}
-                          </strong>
-                        </td>
+                <tbody>
+                  {filteredInterns.map((employee) => (
+                    <tr key={employee.id}>
+                      <td>
+                        <strong className="employee-id">
+                          {employee.employeeId || "-"}
+                        </strong>
+                      </td>
 
-                        <td>
-                          <div className="employee-cell">
-                            <div className="employee-avatar">
-                              {(
-                                employee.fullName || "I"
-                              )
-                                .charAt(0)
-                                .toUpperCase()}
-                            </div>
-
-                            <div>
-                              <strong>
-                                {employee.fullName || "-"}
-                              </strong>
-
-                              <span>
-                                {employee.phone || "-"}
-                              </span>
-                            </div>
+                      <td>
+                        <div className="employee-cell">
+                          <div className="employee-avatar">
+                            {(employee.fullName || "I")
+                              .charAt(0)
+                              .toUpperCase()}
                           </div>
-                        </td>
 
-                        <td>
-                          <span className="email-text">
-                            {employee.email || "-"}
-                          </span>
-                        </td>
+                          <div>
+                            <strong>
+                              {employee.fullName || "-"}
+                            </strong>
+                            <span>{employee.phone || "-"}</span>
+                          </div>
+                        </div>
+                      </td>
 
-                        <td>
-                          {employee.domainName ||
-                            employee.domain ||
-                            "-"}
-                        </td>
+                      <td>
+                        <span className="email-text">
+                          {employee.email || "-"}
+                        </span>
+                      </td>
 
-                        <td>
-                          <span className="intern-badge">
-                            INTERN
-                          </span>
-                        </td>
+                      <td>
+                        {employee.domainName ||
+                          employee.domain ||
+                          "-"}
+                      </td>
 
-                        <td>
-                          {employee.joiningDate || "-"}
-                        </td>
+                      <td>
+                        <span className="intern-badge">
+                          INTERN
+                        </span>
+                      </td>
 
-                        <td>
-                          <span
-                            className={`status-badge ${
-                              String(
-                                employee.status || "ACTIVE"
-                              ).toLowerCase()
-                            }`}
+                      <td>{employee.joiningDate || "-"}</td>
+
+                      <td>
+                        <span
+                          className={`status-badge ${String(
+                            employee.status || "ACTIVE"
+                          ).toLowerCase()}`}
+                        >
+                          <span className="status-dot" />
+                          {employee.status || "ACTIVE"}
+                        </span>
+                      </td>
+
+                      <td>
+                        <div className="row-actions">
+                          <button
+                            type="button"
+                            className="row-action view"
+                            title="View Intern"
+                            onClick={() => handleView(employee)}
                           >
-                            <span className="status-dot"></span>
-                            {employee.status || "ACTIVE"}
-                          </span>
-                        </td>
+                            <Eye size={16} />
+                          </button>
 
-                        <td>
-                          <div className="row-actions">
-                            <button
-                              className="row-action view"
-                              title="View Intern"
-                              onClick={() =>
-                                handleView(employee)
-                              }
-                            >
-                              <Eye size={16} />
-                            </button>
+                          <button
+                            type="button"
+                            className="row-action edit"
+                            title="Edit Intern"
+                            onClick={() => handleEdit(employee)}
+                          >
+                            <Pencil size={16} />
+                          </button>
 
-                            <button
-                              className="row-action edit"
-                              title="Edit Intern"
-                              onClick={() =>
-                                handleEdit(employee)
-                              }
-                            >
-                              <Pencil size={16} />
-                            </button>
-
-                            <button
-                              className="row-action delete"
-                              title="Move to Former Employees"
-                              onClick={() =>
-                                handleDelete(employee.id)
-                              }
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
+                          <button
+                            type="button"
+                            className="row-action delete"
+                            title="Move to Former Employees"
+                            onClick={() => handleDelete(employee.id)}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            !error && (
               <div className="empty-state">
                 <div className="empty-icon">
                   <Users size={28} />
                 </div>
 
                 <h3>
-                  {search
-                    ? "No interns found"
-                    : "No interns yet"}
+                  {search ? "No interns found" : "No interns yet"}
                 </h3>
 
                 <p>
@@ -493,20 +440,19 @@ const Interns = () => {
 
                 {!search && (
                   <button
+                    type="button"
                     className="primary-action empty-button"
-                    onClick={() =>
-                      navigate("/employees/add")
-                    }
+                    onClick={() => navigate("/employees/add")}
                   >
-                    <span className="plus-icon">+</span>
+                    <Plus size={16} />
                     Add Intern
                   </button>
                 )}
               </div>
-            )}
-          </section>
-        </main>
-      </div>
+            )
+          )}
+        </section>
+      </main>
     </div>
   );
 };

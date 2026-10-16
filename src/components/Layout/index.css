@@ -1,0 +1,128 @@
+.shared-layout {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  background: #f4f8f7;
+}
+
+/* Fixed-width sidebar */
+.shared-layout > .shared-sidebar {
+  flex: 0 0 220px;
+  width: 220px;
+  min-width: 220px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Main page area */
+.shared-layout-content {
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  min-height: 100vh;
+  overflow-x: auto;
+}
+
+/* Dashboard fills available space */
+.shared-layout-content > .dashboard-page {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+}
+
+/* Hide the Dashboard's original sidebar */
+.shared-layout-content > .dashboard-page > .sidebar {
+  display: none !important;
+}
+
+/* Remove the old sidebar offset */
+.shared-layout-content > .dashboard-page > .main-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+/* Allow dashboard sections to shrink */
+.shared-layout-content .dashboard-content,
+.shared-layout-content .dashboard-main,
+.shared-layout-content .dashboard-container {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Keep the sidebar usable on smaller screens */
+@media (max-width: 768px) {
+  .shared-layout > .shared-sidebar {
+    flex-basis: 190px;
+    width: 190px;
+    min-width: 190px;
+  }
+}
+
+@media (max-width: 560px) {
+  .shared-layout > .shared-sidebar {
+    flex-basis: 64px;
+    width: 64px;
+    min-width: 64px;
+  }
+
+  .shared-layout > .shared-sidebar .brand-text,
+  .shared-layout > .shared-sidebar .nav-item span,
+  .shared-layout > .shared-sidebar .sidebar-bottom-card {
+    display: none !important;
+  }
+
+  .shared-layout > .shared-sidebar .brand {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .shared-layout > .shared-sidebar .nav-item {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+.shared-layout-content > * {
+  box-sizing: border-box;
+}
+
+.shared-layout-content > .employee-page-content {
+  padding: 20px 24px;
+}
+.shared-layout {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  background: #eef6f3;
+  gap: 12px;
+}
+
+.shared-layout > .shared-sidebar {
+  flex: 0 0 200px;
+  width: 200px;
+  min-width: 200px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.shared-layout-content {
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  min-height: 100vh;
+  overflow-x: auto;
+  box-sizing: border-box;
+}

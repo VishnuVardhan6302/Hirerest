@@ -1,9 +1,6 @@
+
 import React, { useEffect, useState } from "react";
-import {
-  useNavigate,
-  useParams,
-  useLocation,
-} from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 
 import {
   ArrowLeft,
@@ -21,6 +18,8 @@ import {
 
 import "./index.css";
 
+const API_BASE_URL = "http://localhost:8080";
+
 function EmployeeDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -30,140 +29,112 @@ function EmployeeDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  /* =====================================================
-     LOAD EMPLOYEE DETAILS
-     ===================================================== */
-
   useEffect(() => {
-    const loadEmployee = () => {
+    let cancelled = false;
+
+    const loadEmployee = async () => {
       try {
         setLoading(true);
         setError("");
+        setEmployee(null);
 
-        /* =================================================
-           1. CHECK EMPLOYEE PASSED FROM FORMER EMPLOYEES
-           ================================================= */
-
+        // Preserve navigation from Former Employees.
         if (
           location.state?.fromFormerEmployees &&
           location.state?.employee
         ) {
-          setEmployee({
-            ...location.state.employee,
-            status: "FORMER",
-          });
-
-          setLoading(false);
+          if (!cancelled) {
+            setEmployee({
+              ...location.state.employee,
+              status: "FORMER",
+            });
+          }
           return;
         }
 
-        /* =================================================
-           2. LOAD CURRENT EMPLOYEES
-           ================================================= */
+        const token =
+          localStorage.getItem("hirenestToken") ||
+          localStorage.getItem("token") ||
+          sessionStorage.getItem("hirenestToken") ||
+          sessionStorage.getItem("token");
 
-        const currentEmployees =
-          JSON.parse(
-            localStorage.getItem(
-              "mockEmployees"
-            )
-          ) || [];
-
-        /* =================================================
-           3. LOAD FORMER EMPLOYEES
-           ================================================= */
-
-        const formerEmployees =
-          JSON.parse(
-            localStorage.getItem(
-              "mockFormerEmployees"
-            )
-          ) || [];
-
-        /* =================================================
-           4. SEARCH CURRENT EMPLOYEE
-           ================================================= */
-
-        let foundEmployee =
-          currentEmployees.find(
-            (item) =>
-              String(item.id) ===
-              String(id)
-          );
-
-        /* =================================================
-           5. IF NOT FOUND, SEARCH FORMER EMPLOYEE
-           ================================================= */
-
-        if (!foundEmployee) {
-          foundEmployee =
-            formerEmployees.find(
-              (item) =>
-                String(item.id) ===
-                String(id)
-            );
+        if (!token) {
+          throw new Error("Please log in again.");
         }
 
-        /* =================================================
-           6. EMPLOYEE NOT FOUND
-           ================================================= */
+        const response = await fetch(
+          `${API_BASE_URL}/api/employees/${id}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
-        if (!foundEmployee) {
+        if (response.status === 401 || response.status === 403) {
+          throw new Error(
+            "Your session has expired or you are not authorized. Please log in again."
+          );
+        }
+
+        if (!response.ok) {
+          throw new Error(
+            `Unable to load employee. Status: ${response.status}`
+          );
+        }
+
+        const data = await response.json();
+
+        // Support either a single employee object or an array.
+        const foundEmployee = Array.isArray(data)
+          ? data.find((item) => String(item.id) === String(id))
+          : data;
+
+        if (
+          !foundEmployee ||
+          String(foundEmployee.id) !== String(id)
+        ) {
+          throw new Error("Employee not found.");
+        }
+
+        if (!cancelled) {
+          setEmployee(foundEmployee);
+        }
+      } catch (err) {
+        console.error("Employee details error:", err);
+
+        if (!cancelled) {
           setEmployee(null);
-          setError(
-            "Employee not found."
-          );
-          return;
+          setError(err.message || "Unable to load employee details.");
         }
-
-        /* =================================================
-           7. CHECK WHETHER EMPLOYEE IS FORMER
-           ================================================= */
-
-        const isFormerEmployee =
-          formerEmployees.some(
-            (item) =>
-              String(item.id) ===
-              String(id)
-          );
-
-        /* =================================================
-           8. SET FORMER STATUS
-           ================================================= */
-
-        if (isFormerEmployee) {
-          foundEmployee = {
-            ...foundEmployee,
-            status: "FORMER",
-          };
-        }
-
-        /* =================================================
-           9. SET EMPLOYEE
-           ================================================= */
-
-        setEmployee(foundEmployee);
-
-      } catch (error) {
-        console.error(
-          "Employee details error:",
-          error
-        );
-
-        setEmployee(null);
-        setError(
-          "Unable to load employee details."
-        );
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
-    loadEmployee();
+    if (id) {
+      loadEmployee();
+    } else {
+      setError("Employee ID is missing.");
+      setLoading(false);
+    }
+
+    return () => {
+      cancelled = true;
+    };
   }, [id, location.state]);
 
-  /* =====================================================
-     LOADING
-     ===================================================== */
+  const goBack = () => {
+    navigate(
+      location.state?.fromFormerEmployees
+        ? "/former-employees"
+        : "/employees"
+    );
+  };
 
   if (loading) {
     return (
@@ -175,484 +146,287 @@ function EmployeeDetails() {
     );
   }
 
-  /* =====================================================
-     ERROR / NOT FOUND
-     ===================================================== */
-
   if (!employee) {
     return (
       <div className="employee-details-page">
-
         <div className="employee-not-found">
-
           <AlertCircle size={42} />
 
-          <h2>
-            {error || "Employee Not Found"}
-          </h2>
+          <h2>{error || "Employee Not Found"}</h2>
 
           <p>
-            The employee you're looking for
-            does not exist.
+            {error.includes("log in again")
+              ? "Your session may have expired. Please log in to continue."
+              : "The employee details could not be loaded."}
           </p>
 
-          <button
-            onClick={() =>
-              navigate("/employees")
-            }
-          >
-            <ArrowLeft size={17} />
-            Back to Employees
-          </button>
-
+          {error.includes("log in again") ? (
+            <button onClick={() => navigate("/login")}>
+              Go to Login
+            </button>
+          ) : (
+            <button onClick={goBack}>
+              <ArrowLeft size={17} />
+              Back to Employees
+            </button>
+          )}
         </div>
-
       </div>
     );
   }
 
-  /* =====================================================
-     MAIN UI
-     ===================================================== */
+  const isFormer =
+    String(employee.status || "").toUpperCase() === "FORMER" ||
+    location.state?.fromFormerEmployees;
+
+  const displayValue = (value) => value || "-";
 
   return (
     <div className="employee-details-page">
-
-      {/* =================================================
-          HEADER
-          ================================================= */}
-
+      {/* Header */}
       <div className="details-header">
-
         <button
           className="details-back-button"
-          onClick={() =>
-            navigate(
-              location.state?.fromFormerEmployees
-                ? "/former-employees"
-                : "/employees"
-            )
-          }
+          onClick={goBack}
         >
           <ArrowLeft size={17} />
-
-          {location.state?.fromFormerEmployees
+          {isFormer
             ? "Back to Former Employees"
             : "Back to Employees"}
         </button>
 
         <div className="details-heading">
-
           <div className="details-avatar">
-            {employee.fullName
-              ?.charAt(0)
-              ?.toUpperCase() || "E"}
+            {employee.fullName?.charAt(0)?.toUpperCase() || "E"}
           </div>
 
           <div>
-
             <span className="details-eyebrow">
-              {employee.status === "FORMER"
+              {isFormer
                 ? "Former Employee Profile"
                 : "Employee Profile"}
             </span>
 
-            <h1>
-              {employee.fullName}
-            </h1>
-
-            <p>
-              {employee.employeeId}
-            </p>
-
+            <h1>{employee.fullName || "Employee"}</h1>
+            <p>{employee.employeeId || "-"}</p>
           </div>
-
         </div>
 
-        {/* Don't show edit for former employees */}
-
-        {employee.status !== "FORMER" && (
+        {!isFormer && (
           <button
             className="edit-details-button"
             onClick={() =>
-              navigate(
-                `/employees/${employee.id}/edit`
-              )
+              navigate(`/employees/${employee.id}/edit`)
             }
           >
             <Pencil size={17} />
             Edit Employee
           </button>
         )}
-
       </div>
 
-      {/* =================================================
-          PROFILE SUMMARY
-          ================================================= */}
-
+      {/* Profile Summary */}
       <div className="employee-summary-card">
-
         <div className="summary-item">
-
-          <span className="summary-label">
-            Employee ID
-          </span>
-
-          <strong>
-            {employee.employeeId || "-"}
-          </strong>
-
+          <span className="summary-label">Employee ID</span>
+          <strong>{displayValue(employee.employeeId)}</strong>
         </div>
 
         <div className="summary-item">
-
-          <span className="summary-label">
-            Domain
-          </span>
-
+          <span className="summary-label">Domain</span>
           <strong>
-            {employee.domainName ||
-              employee.domain ||
-              "-"}
+            {displayValue(employee.domainName || employee.domain)}
           </strong>
-
         </div>
 
         <div className="summary-item">
-
-          <span className="summary-label">
-            Employment
-          </span>
-
-          <strong>
-            {employee.employmentType ||
-              "-"}
-          </strong>
-
+          <span className="summary-label">Employment</span>
+          <strong>{displayValue(employee.employmentType)}</strong>
         </div>
 
         <div className="summary-item">
-
-          <span className="summary-label">
-            Status
-          </span>
-
+          <span className="summary-label">Status</span>
           <span
             className={`details-status ${
-              employee.status
-                ?.toLowerCase() ===
-              "active"
+              String(isFormer ? "former" : employee.status || "ACTIVE")
+                .toLowerCase() === "active"
                 ? "active"
                 : "inactive"
             }`}
           >
-            {employee.status || "ACTIVE"}
+            {isFormer ? "FORMER" : employee.status || "ACTIVE"}
           </span>
-
         </div>
-
       </div>
 
-      {/* =================================================
-          MAIN GRID
-          ================================================= */}
-
+      {/* Details Grid */}
       <div className="details-grid">
-
-        {/* =================================================
-            PERSONAL INFORMATION
-            ================================================= */}
-
+        {/* Personal Information */}
         <section className="details-card">
-
           <div className="details-card-heading">
-
             <div className="details-section-icon">
               <User size={19} />
             </div>
 
             <div>
-
-              <h2>
-                Personal Information
-              </h2>
-
-              <p>
-                Basic employee information
-              </p>
-
+              <h2>Personal Information</h2>
+              <p>Basic employee information</p>
             </div>
-
           </div>
 
           <div className="details-fields">
-
             <div className="detail-field">
-
               <span>
                 <User size={16} />
                 Full Name
               </span>
-
-              <strong>
-                {employee.fullName || "-"}
-              </strong>
-
+              <strong>{displayValue(employee.fullName)}</strong>
             </div>
 
             <div className="detail-field">
-
               <span>
                 <Mail size={16} />
                 Email
               </span>
-
-              <strong>
-                {employee.email || "-"}
-              </strong>
-
+              <strong>{displayValue(employee.email)}</strong>
             </div>
 
             <div className="detail-field">
-
               <span>
                 <Phone size={16} />
                 Phone
               </span>
-
-              <strong>
-                {employee.phone || "-"}
-              </strong>
-
+              <strong>{displayValue(employee.phone)}</strong>
             </div>
 
             <div className="detail-field">
-
               <span>
                 <Calendar size={16} />
                 Date of Birth
               </span>
-
-              <strong>
-                {employee.dateOfBirth || "-"}
-              </strong>
-
+              <strong>{displayValue(employee.dateOfBirth)}</strong>
             </div>
-
           </div>
-
         </section>
 
-        {/* =================================================
-            EMPLOYMENT INFORMATION
-            ================================================= */}
-
+        {/* Employment Information */}
         <section className="details-card">
-
           <div className="details-card-heading">
-
             <div className="details-section-icon">
               <Briefcase size={19} />
             </div>
 
             <div>
-
-              <h2>
-                Employment Information
-              </h2>
-
-              <p>
-                Employee work details
-              </p>
-
+              <h2>Employment Information</h2>
+              <p>Employee work details</p>
             </div>
-
           </div>
 
           <div className="details-fields">
-
             <div className="detail-field">
-
               <span>
                 <Building2 size={16} />
                 Domain
               </span>
-
               <strong>
-                {employee.domainName ||
-                  employee.domain ||
-                  "-"}
+                {displayValue(employee.domainName || employee.domain)}
               </strong>
-
             </div>
 
             <div className="detail-field">
-
               <span>
                 <Briefcase size={16} />
                 Employment Type
               </span>
-
-              <strong>
-                {employee.employmentType ||
-                  "-"}
-              </strong>
-
+              <strong>{displayValue(employee.employmentType)}</strong>
             </div>
 
             <div className="detail-field">
-
               <span>
                 <Calendar size={16} />
                 Joining Date
               </span>
-
-              <strong>
-                {employee.joiningDate ||
-                  "-"}
-              </strong>
-
+              <strong>{displayValue(employee.joiningDate)}</strong>
             </div>
 
             <div className="detail-field">
-
               <span>
                 <ShieldCheck size={16} />
                 Status
               </span>
-
               <strong>
-                {employee.status ||
-                  "ACTIVE"}
+                {isFormer ? "FORMER" : employee.status || "ACTIVE"}
               </strong>
-
             </div>
-
           </div>
-
         </section>
 
-        {/* =================================================
-            ADDRESS
-            ================================================= */}
-
+        {/* Address Information */}
         <section className="details-card full-details-card">
-
           <div className="details-card-heading">
-
             <div className="details-section-icon">
               <MapPin size={19} />
             </div>
 
             <div>
-
-              <h2>
-                Address Information
-              </h2>
-
-              <p>
-                Residential and permanent address
-              </p>
-
+              <h2>Address Information</h2>
+              <p>Residential and permanent address</p>
             </div>
-
           </div>
 
           <div className="address-details-grid">
-
             <div className="address-box">
-
-              <span>
-                Residential Address
-              </span>
-
+              <span>Residential Address</span>
               <p>
-                {employee.residentialAddress ||
-                  "Not provided"}
+                {displayValue(employee.residentialAddress)}
               </p>
-
             </div>
 
             <div className="address-box">
-
-              <span>
-                Permanent Address
-              </span>
-
+              <span>Permanent Address</span>
               <p>
-                {employee.permanentAddress ||
-                  "Not provided"}
+                {displayValue(employee.permanentAddress)}
               </p>
-
             </div>
-
           </div>
-
         </section>
 
-        {/* =================================================
-            EMERGENCY CONTACT
-            ================================================= */}
-
+        {/* Emergency Contact */}
         <section className="details-card full-details-card">
-
           <div className="details-card-heading">
-
             <div className="details-section-icon emergency-details-icon">
               <Phone size={19} />
             </div>
 
             <div>
-
-              <h2>
-                Emergency Contact
-              </h2>
-
-              <p>
-                Emergency contact information
-              </p>
-
+              <h2>Emergency Contact</h2>
+              <p>Emergency contact information</p>
             </div>
-
           </div>
 
           <div className="details-fields emergency-fields">
-
             <div className="detail-field">
-
               <span>
                 <User size={16} />
                 Contact Name
               </span>
-
               <strong>
-                {employee.emergencyContactName ||
-                  "-"}
+                {displayValue(employee.emergencyContactName)}
               </strong>
-
             </div>
 
             <div className="detail-field">
-
               <span>
                 <Phone size={16} />
                 Contact Phone
               </span>
-
               <strong>
-                {employee.emergencyContactPhone ||
-                  "-"}
+                {displayValue(employee.emergencyContactPhone)}
               </strong>
-
             </div>
-
           </div>
-
         </section>
-
       </div>
-
     </div>
   );
 }

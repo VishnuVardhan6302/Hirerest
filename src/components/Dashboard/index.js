@@ -12,7 +12,7 @@ import {
   UserCircle,
   Settings,
   Search,
-  Bell,
+  
   ChevronDown,
   CalendarDays,
   UserRound,
@@ -23,6 +23,7 @@ import {
   ShieldCheck,
   LogOut,
   X,
+   Orbit,
 } from "lucide-react";
 
 /* =========================================================
@@ -175,6 +176,9 @@ function Dashboard() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [period, setPeriod] = useState("This Month");
+  const [probationPeriod, setProbationPeriod] = useState("This Month");
+  const [allEmployees, setAllEmployees] = useState([]);
+const [showSearchResults, setShowSearchResults] = useState(false);
 
   /* =======================================================
      GET JWT TOKEN
@@ -200,6 +204,16 @@ function Dashboard() {
   /* =======================================================
      FETCH DASHBOARD DATA
   ======================================================= */
+
+  useEffect(() => {
+    try {
+      const storedEmployees = JSON.parse(localStorage.getItem("mockEmployees")) || [];
+      setAllEmployees(storedEmployees);
+    } catch (err) {
+      console.error("Unable to load local employees:", err);
+      setAllEmployees([]);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -288,6 +302,7 @@ function Dashboard() {
 
         const data = await response.json();
 
+        
         console.log(
           "Dashboard API Response:",
           data
@@ -310,6 +325,16 @@ function Dashboard() {
     };
 
     fetchDashboard();
+  }, []);
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (!event.target.closest(".search-box") && !event.target.closest(".search-results-dropdown")) {
+        setShowSearchResults(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
   /* =======================================================
@@ -537,6 +562,37 @@ function Dashboard() {
       })
     );
 
+  const searchQuery = searchText.trim().toLowerCase();
+
+  const searchableEmployees = [...allEmployees, ...recentEmployees];
+
+  const uniqueEmployees = searchableEmployees.filter((employee, index, array) => {
+    const employeeKey = employee.id || employee.employeeId || employee.employeeCode || `${employee.email}-${employee.fullName}`;
+    return index === array.findIndex((item) => {
+      const key = item.id || item.employeeId || item.employeeCode || `${item.email}-${item.fullName}`;
+      return key === employeeKey;
+    });
+  });
+
+  const filteredEmployees = uniqueEmployees.filter((employee) => {
+    if (!searchQuery) return true;
+    return [employee.id, employee.employeeId, employee.employeeCode, employee.fullName, employee.name, employee.email, employee.phone, employee.domainName, employee.domain, employee.employmentType, employee.status]
+      .some((value) => String(value || "").toLowerCase().includes(searchQuery));
+  });
+
+  const filteredDomains = domainData.filter((domain) => {
+    if (!searchQuery) return true;
+    return String(domain.name || "").toLowerCase().includes(searchQuery);
+  });
+
+  const filteredRecords = recentRecords.filter((record) => {
+    if (!searchQuery) return true;
+    return [record.id, record.title, record.description]
+      .some((value) => String(value || "").toLowerCase().includes(searchQuery));
+  });
+
+  const hasSearchResults = filteredEmployees.length > 0 || filteredDomains.length > 0 || filteredRecords.length > 0;
+
   /* =======================================================
      CURRENT USER DETAILS
   ======================================================= */
@@ -566,6 +622,20 @@ function Dashboard() {
      RENDER
   ======================================================= */
 
+
+const role =
+  localStorage.getItem("hirenestRole") ||
+  sessionStorage.getItem("hirenestRole") ||
+  "";
+
+const displayRole =
+  role === "USER" ? "Candidate" : role;
+
+ const fullName =
+  localStorage.getItem("hirenestFullName") ||
+  sessionStorage.getItem("hirenestFullName") ||
+  "Admin";
+  
   return (
     <div className="dashboard-page">
 
@@ -679,25 +749,83 @@ function Dashboard() {
               type="text"
               placeholder="Search employees, domains, documents..."
               value={searchText}
-              onChange={(e) =>
-                setSearchText(
-                  e.target.value
-                )
-              }
+              onChange={(e) => {
+                const value = e.target.value;
+                setSearchText(value);
+                setShowSearchResults(value.trim().length > 0);
+              }}
+              onFocus={() => {
+                if (searchText.trim()) setShowSearchResults(true);
+              }}
             />
 
             {searchText && (
               <button
                 className="clear-search"
-                onClick={() =>
-                  setSearchText("")
-                }
+                onClick={() => {
+                  setSearchText("");
+                  setShowSearchResults(false);
+                }}
               >
                 <X size={14} />
               </button>
             )}
 
           </div>
+
+          {showSearchResults && searchText.trim() && (
+            <div className="search-results-dropdown">
+              {filteredEmployees.length > 0 && (
+                <div className="search-result-section">
+                  <div className="search-result-title">Employees</div>
+                  {filteredEmployees.slice(0, 8).map((employee) => {
+                    const employeeId = employee.id || employee.employeeId || employee.employeeCode;
+                    return (
+                      <button type="button" key={`${employeeId}-${employee.email || employee.fullName}`} className="search-result-item"
+                        onClick={() => {
+                          if (employee.id) navigate(`/employees/${employee.id}`); else navigate("/employees");
+                          setSearchText(""); setShowSearchResults(false);
+                        }}>
+                        <div className="search-result-avatar">{(employee.fullName || employee.name || "U").charAt(0).toUpperCase()}</div>
+                        <div className="search-result-content">
+                          <strong>{employee.fullName || employee.name || "Unknown Employee"}</strong>
+                          <span>{employee.employeeCode || employee.employeeId || "Employee"} · {employee.domainName || employee.domain || "No domain"}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {filteredDomains.length > 0 && (
+                <div className="search-result-section">
+                  <div className="search-result-title">Domains</div>
+                  {filteredDomains.slice(0, 5).map((domain) => (
+                    <button type="button" key={domain.name} className="search-result-item"
+                      onClick={() => { navigate("/domains"); setSearchText(""); setShowSearchResults(false); }}>
+                      <div className="search-result-avatar">D</div>
+                      <div className="search-result-content"><strong>{domain.name}</strong><span>Domain</span></div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {filteredRecords.length > 0 && (
+                <div className="search-result-section">
+                  <div className="search-result-title">Recent Records</div>
+                  {filteredRecords.slice(0, 5).map((record) => (
+                    <button type="button" key={`${record.id}-${record.time}`} className="search-result-item"
+                      onClick={() => { navigate("/reports"); setSearchText(""); setShowSearchResults(false); }}>
+                      <div className="search-result-avatar">R</div>
+                      <div className="search-result-content"><strong>{record.title}</strong><span>{record.id || "Record"} · {record.description}</span></div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {!hasSearchResults && <div className="search-no-result">No results found for "{searchText}"</div>}
+            </div>
+          )}
 
           <div className="topbar-right">
 
@@ -802,60 +930,60 @@ function Dashboard() {
               WELCOME
           ================================================= */}
 
-          <section className="welcome-section">
 
-            <div>
+<section className="welcome-banner">
+  <div className="welcome-banner-content">
+    <div className="welcome-eyebrow">
+      <span className="welcome-status-dot" />
+      YOUR WORKSPACE
+    </div>
 
-              <p className="welcome-small">
-                Good morning,
-              </p>
+    <p className="welcome-greeting">
+      {new Date().getHours() < 12
+        ? "Good morning"
+        : new Date().getHours() < 17
+        ? "Good afternoon"
+        : "Good evening"}
+      ,
+    </p>
 
-              <h1>
-                {userEmail.split("@")[0]}{" "}
-                <span>👋</span>
-              </h1>
+   <h1 className="welcome-heading">
+  {fullName}
+  <Orbit className="welcome-hand-icon" size={22} />
+</h1>
 
-              <p className="welcome-description">
-                Here's what's happening
-                with your employees today.
-              </p>
+    <div className="welcome-meta">
+      <span className="welcome-role-badge">
+        {displayRole}
+      </span>
+      <span className="welcome-meta-divider" />
+      <p>Here's what's happening with your employees today.</p>
+    </div>
+  </div>
 
-            </div>
+  <div className="welcome-date-card">
+    <div className="welcome-date-icon">
+      <CalendarDays size={22} />
+    </div>
 
-            <div className="date-card">
+    <div className="welcome-date-info">
+      <span className="welcome-date-label">TODAY</span>
 
-              <div className="date-icon">
-                <CalendarDays
-                  size={22}
-                />
-              </div>
+      <strong>
+        {new Date().toLocaleDateString("en-GB", {
+          weekday: "short",
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })}
+      </strong>
 
-              <div>
-
-                <strong>
-                  {new Date().toLocaleDateString(
-                    "en-GB",
-                    {
-                      weekday:
-                        "long",
-                      day: "2-digit",
-                      month:
-                        "short",
-                      year:
-                        "numeric",
-                    }
-                  )}
-                </strong>
-
-                <span>
-                  Have a productive day!
-                </span>
-
-              </div>
-
-            </div>
-
-          </section>
+      <span className="welcome-date-message">
+        Have a productive day!
+      </span>
+    </div>
+  </div>
+</section>
 
           {/* =================================================
               ERROR MESSAGE
@@ -1048,7 +1176,7 @@ function Dashboard() {
 
                   {domainData.length > 0 ? (
 
-                    domainData.map(
+                    filteredDomains.map(
                       (domain) => (
 
                         <div
@@ -1115,25 +1243,26 @@ function Dashboard() {
 
             {/* PROBATION */}
 
-            <div className="dashboard-card probation-card">
+            {/* PROBATION */}
 
-              <div className="card-header">
+<div className="dashboard-card probation-card">
 
-                <h2>
-                  Probation Status
-                </h2>
+  <div className="card-header">
+    <h2>Probation Status</h2>
 
-                <button className="period-button">
+    <select
+      className="period-button probation-select"
+      value={probationPeriod}
+      onChange={(e) => setProbationPeriod(e.target.value)}
+    >
+      <option value="This Month">This Month</option>
+      <option value="This Week">This Week</option>
+      <option value="Last Month">Last Month</option>
+      <option value="This Year">This Year</option>
+    </select>
+  </div>
 
-                  This Month
-
-                  <ChevronDown
-                    size={14}
-                  />
-
-                </button>
-
-              </div>
+  
 
               <div className="bar-chart">
 
@@ -1234,9 +1363,9 @@ function Dashboard() {
 
                   <tbody>
 
-                    {recentEmployees.length > 0 ? (
+                    {filteredEmployees.length > 0 ? (
 
-                      recentEmployees.map(
+                     filteredEmployees.map(
                         (employee) => (
 
                           <tr
@@ -1360,9 +1489,9 @@ function Dashboard() {
 
               <div className="records-list">
 
-                {recentRecords.length > 0 ? (
+                {filteredRecords.length > 0 ? (
 
-                  recentRecords.map(
+                  filteredRecords.map(
                     (record) => {
 
                       const Icon =

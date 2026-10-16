@@ -1079,3 +1079,429 @@ body {
     font-size: 23px;
   }
 }
+.employee-page-content {
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+  background: #f4f8f7;
+}
+
+.employee-page-content .employee-content {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+/* =====================================
+   EMPLOYEE LIST - COMPACT LAYOUT
+===================================== */
+
+.employee-page-content {
+  padding: 16px 20px !important;
+  min-height: 100vh;
+}
+
+/* Reduce space above the page heading */
+.employee-page-content .back-dashboard {
+  margin-bottom: 18px !important;
+  font-size: 13px;
+}
+
+/* Page heading */
+.employee-page-content .employee-page-heading {
+  margin-bottom: 18px !important;
+  gap: 12px;
+}
+
+.employee-page-content .employee-page-heading h1 {
+  font-size: 26px !important;
+  margin: 0 0 5px;
+}
+
+.employee-page-content .employee-page-heading p {
+  font-size: 13px !important;
+  margin: 0;
+}
+
+/* Smaller action buttons */
+.employee-page-content .employee-page-actions {
+  gap: 8px !important;
+}
+
+.employee-page-content .employee-page-actions button {
+  min-height: 38px !important;
+  padding: 8px 13px !important;
+  font-size: 12px !important;
+}
+
+/* Employee list card */
+.employee-page-content .employee-card {
+  margin-top: 0 !important;
+  border-radius: 12px;
+}
+
+/* Compact card header */
+.employee-page-content .employee-card-header {
+  min-height: 62px !important;
+  padding: 12px 16px !important;
+}
+
+.employee-page-content .employee-card-header h2 {
+  font-size: 15px !important;
+  margin: 0 0 4px;
+}
+
+.employee-page-content .employee-card-header p {
+  font-size: 11px !important;
+  margin: 0;
+}
+
+/* Search input */
+.employee-page-content .employee-table-search {
+  width: 210px !important;
+  height: 35px !important;
+}
+
+.employee-page-content .employee-table-search input {
+  font-size: 12px !important;
+}
+
+/* Reduce table row height */
+.employee-page-content .employee-table th {
+  padding: 10px 12px !important;
+  font-size: 11px !important;
+  white-space: nowrap;
+}
+
+.employee-page-content .employee-table td {
+  padding: 10px 12px !important;
+  font-size: 12px !important;
+  white-space: nowrap;
+}
+
+/* Employee name and avatar */
+.employee-page-content .employee-person {
+  gap: 10px;
+}
+
+.employee-page-content .employee-person strong {
+  font-size: 12px !important;
+}
+
+.employee-page-content .employee-person span {
+  font-size: 10px !important;
+}
+
+.employee-page-content .employee-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  flex-shrink: 0;
+}
+
+/* Action buttons */
+.employee-page-content .row-action {
+  width: 30px !important;
+  height: 30px !important;
+}
+
+/* Remove unnecessary table minimum width if present */
+.employee-page-content .employee-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.employee-page-content .employee-table {
+  width: 100%;
+}
+
+/* Reduce unused space on smaller screens */
+@media (max-width: 900px) {
+  .employee-page-content {
+    padding: 14px !important;
+  }
+
+  .employee-page-content .employee-page-heading {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .employee-page-content .employee-page-actions {
+    flex-wrap: wrap;
+  }
+}
+/* ==========================================
+   EMPLOYEE LIST - READABLE FONT OVERRIDES
+========================================== */
+
+.employee-page-content {
+  padding: 22px 26px !important;
+  font-size: 15px !important;
+}
+
+/* Back navigation */
+.employee-page-content .back-dashboard {
+  font-size: 14px !important;
+  margin-bottom: 24px !important;
+}
+
+/* Page title */
+.employee-page-content .employee-page-heading h1 {
+  font-size: 30px !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  margin-bottom: 6px !important;
+}
+
+.employee-page-content .employee-page-heading p {
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+}
+
+/* Action buttons */
+.employee-page-content .employee-page-actions button {
+  font-size: 14px !important;
+  min-height: 44px !important;
+  padding: 10px 16px !important;
+}
+
+/* Employee list card heading */
+.employee-page-content .employee-card-header {
+  padding: 18px 20px !important;
+  min-height: 76px !important;
+}
+
+.employee-page-content .employee-card-header h2 {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+
+.employee-page-content .employee-card-header p {
+  font-size: 13px !important;
+  margin-top: 5px !important;
+}
+
+/* Search field */
+.employee-page-content .employee-table-search {
+  width: 250px !important;
+  height: 42px !important;
+}
+
+.employee-page-content .employee-table-search input {
+  font-size: 14px !important;
+}
+
+.employee-page-content .employee-table-search input::placeholder {
+  font-size: 13px !important;
+}
+
+/* Table column headings */
+.employee-page-content .employee-table th {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  padding: 15px 14px !important;
+}
+
+/* Table data */
+.employee-page-content .employee-table td {
+  font-size: 14px !important;
+  padding: 16px 14px !important;
+  line-height: 1.5 !important;
+}
+
+/* Employee information */
+.employee-page-content .employee-person strong {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+.employee-page-content .employee-person span {
+  font-size: 12px !important;
+}
+
+.employee-page-content .employee-id {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+.employee-page-content .employee-avatar {
+  width: 36px !important;
+  height: 36px !important;
+  font-size: 14px !important;
+}
+
+/* Status badge */
+.employee-page-content .status-pill {
+  font-size: 12px !important;
+  padding: 7px 12px !important;
+}
+
+/* Action icons */
+.employee-page-content .row-action {
+  width: 34px !important;
+  height: 34px !important;
+}
+
+/* Loading, errors and empty state */
+.employee-page-content .employee-loading,
+.employee-page-content .employee-error,
+.employee-page-content .no-employees {
+  font-size: 14px !important;
+  padding: 24px !important;
+}
+
+/* Keep the table responsive */
+.employee-page-content .employee-table-wrapper {
+  width: 100% !important;
+  overflow-x: auto !important;
+}
+
+.employee-page-content .employee-table {
+  width: 100% !important;
+}
+
+/* Smaller screens */
+@media (max-width: 900px) {
+  .employee-page-content {
+    padding: 18px 14px !important;
+  }
+
+  .employee-page-content .employee-page-heading h1 {
+    font-size: 26px !important;
+  }
+
+  .employee-page-content .employee-page-heading p {
+    font-size: 14px !important;
+  }
+}
+/* =========================================
+   EMPLOYEE LIST - BALANCED UI
+========================================= */
+
+.employee-page-content {
+  padding: 18px 20px !important;
+  font-size: 14px !important;
+}
+
+/* Back navigation */
+.employee-page-content .back-dashboard {
+  font-size: 13px !important;
+  margin-bottom: 20px !important;
+}
+
+/* Page heading */
+.employee-page-content .employee-page-heading h1 {
+  font-size: 26px !important;
+  line-height: 1.3 !important;
+  margin-bottom: 5px !important;
+}
+
+.employee-page-content .employee-page-heading p {
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+/* Page action buttons */
+.employee-page-content .employee-page-actions button {
+  min-height: 40px !important;
+  padding: 8px 13px !important;
+  font-size: 12px !important;
+}
+
+/* Employee card */
+.employee-page-content .employee-card-header {
+  min-height: 66px !important;
+  padding: 14px 18px !important;
+}
+
+.employee-page-content .employee-card-header h2 {
+  font-size: 16px !important;
+  margin-bottom: 4px !important;
+}
+
+.employee-page-content .employee-card-header p {
+  font-size: 11px !important;
+}
+
+/* Search field */
+.employee-page-content .employee-table-search {
+  width: 220px !important;
+  height: 36px !important;
+}
+
+.employee-page-content .employee-table-search input {
+  font-size: 12px !important;
+}
+
+.employee-page-content .employee-table-search input::placeholder {
+  font-size: 12px !important;
+}
+
+/* Table headings */
+.employee-page-content .employee-table th {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 12px 12px !important;
+}
+
+/* Table content */
+.employee-page-content .employee-table td {
+  font-size: 13px !important;
+  padding: 12px !important;
+  line-height: 1.4 !important;
+}
+
+/* Employee name and phone */
+.employee-page-content .employee-person strong {
+  font-size: 13px !important;
+}
+
+.employee-page-content .employee-person span {
+  font-size: 11px !important;
+}
+
+.employee-page-content .employee-id {
+  font-size: 12px !important;
+}
+
+.employee-page-content .employee-avatar {
+  width: 34px !important;
+  height: 34px !important;
+  font-size: 12px !important;
+}
+
+/* Status badge */
+.employee-page-content .status-pill {
+  font-size: 11px !important;
+  padding: 6px 10px !important;
+}
+
+/* Action buttons */
+.employee-page-content .row-action {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+/* Responsive layout */
+@media (max-width: 900px) {
+  .employee-page-content {
+    padding: 14px !important;
+  }
+
+  .employee-page-content .employee-page-heading h1 {
+    font-size: 24px !important;
+  }
+}
+/* Remove extra left spacing beside the sidebar */
+.employee-page-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 18px 20px !important;
+  box-sizing: border-box;
+}
+
+.employee-page-content .employee-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}

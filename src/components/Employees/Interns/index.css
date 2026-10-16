@@ -809,3 +809,236 @@ tbody tr:last-child td {
     width: 100%;
   }
 }
+/* Shared Layout integration for Interns page */
+.interns-page-content {
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+  padding: 20px 24px;
+  box-sizing: border-box;
+  background: #f4f8f6;
+  color: #183b31;
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
+}
+
+/* Prevent the page from exceeding the available width */
+.interns-page-content,
+.interns-page-content * {
+  box-sizing: border-box;
+}
+
+.interns-page-content .interns-content {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+}
+
+/* Keep the heading and action buttons responsive */
+.interns-page-content .page-heading {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.interns-page-content .page-actions {
+  flex-wrap: wrap;
+}
+
+.interns-page-content .interns-card {
+  width: 100%;
+  min-width: 0;
+}
+
+.interns-page-content .table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Tablet and mobile */
+@media (max-width: 760px) {
+  .interns-page-content {
+    padding: 20px 16px;
+  }
+
+  .interns-page-content .page-heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .interns-page-content .page-actions {
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .interns-page-content {
+    padding: 16px 12px;
+  }
+
+  .interns-page-content .card-header {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 15px 16px;
+  }
+
+  .interns-page-content .table-search {
+    width: 100%;
+  }
+}
+/* =====================================
+   INTERNS PAGE - FONT SIZE IMPROVEMENT
+===================================== */
+
+/* Main page text */
+.interns-page-content {
+  font-size: 14px;
+}
+
+/* Back to Employees */
+.interns-page-content .back-dashboard {
+  font-size: 14px;
+  margin-bottom: 28px;
+}
+
+/* Page heading */
+.interns-page-content .page-heading h1 {
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.interns-page-content .page-heading p {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Action buttons */
+.interns-page-content .secondary-action,
+.interns-page-content .primary-action {
+  min-height: 42px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Intern List card heading */
+.interns-page-content .card-header {
+  min-height: 72px;
+}
+
+.interns-page-content .card-header h2 {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.interns-page-content .card-header p {
+  font-size: 12px;
+}
+
+/* Search field */
+.interns-page-content .table-search {
+  width: 240px;
+  height: 38px;
+}
+
+.interns-page-content .table-search input {
+  font-size: 13px;
+}
+
+.interns-page-content .table-search input::placeholder {
+  font-size: 12px;
+}
+
+/* Table column headings */
+.interns-page-content .interns-card th {
+  padding: 15px 14px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Table content */
+.interns-page-content .interns-card td {
+  padding: 15px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Employee ID */
+.interns-page-content .employee-id {
+  font-size: 12px;
+}
+
+/* Employee name and phone */
+.interns-page-content .employee-cell strong {
+  font-size: 13px;
+}
+
+.interns-page-content .employee-cell span {
+  font-size: 11px;
+}
+
+/* Email */
+.interns-page-content .email-text {
+  font-size: 12px;
+  max-width: 180px;
+}
+
+/* Intern badge */
+.interns-page-content .intern-badge {
+  padding: 6px 10px;
+  font-size: 10px;
+}
+
+/* Status badge */
+.interns-page-content .status-badge {
+  padding: 6px 10px;
+  font-size: 10px;
+}
+
+/* Action buttons */
+.interns-page-content .row-action {
+  width: 34px;
+  height: 34px;
+}
+
+/* Empty state */
+.interns-page-content .empty-state h3 {
+  font-size: 18px;
+}
+
+.interns-page-content .empty-state p {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Loading and error messages */
+.interns-page-content .interns-loading,
+.interns-page-content .interns-error {
+  padding: 20px;
+  font-size: 14px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 760px) {
+  .interns-page-content .page-heading h1 {
+    font-size: 26px;
+  }
+
+  .interns-page-content .page-heading p {
+    font-size: 13px;
+  }
+
+  .interns-page-content .page-actions {
+    gap: 8px;
+  }
+
+  .interns-page-content .secondary-action,
+  .interns-page-content .primary-action {
+    font-size: 12px;
+  }
+}

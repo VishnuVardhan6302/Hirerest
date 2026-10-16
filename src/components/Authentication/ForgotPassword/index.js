@@ -287,7 +287,7 @@ function ForgotPassword() {
             </div>
 
             <div className="forgot-brand-text">
-              <strong>hirenest</strong>
+              <strong>HireNest</strong>
               <span>
                 EMPLOYEE MANAGEMENT
               </span>
@@ -447,9 +447,9 @@ function ForgotPassword() {
                   </div>
 
                   <h2>
-                    Forgot your
+                    Forgot Your
                     <br />
-                    password?
+                    Password?
                   </h2>
 
                   <p>
@@ -464,7 +464,7 @@ function ForgotPassword() {
                   <div className="forgot-form-group">
 
                     <label>
-                      Email address
+                      Email Address
                     </label>
 
                     <div className="forgot-input">

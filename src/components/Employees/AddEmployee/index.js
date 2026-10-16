@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -20,90 +20,161 @@ import {
 } from "lucide-react";
 import "./index.css";
 
-/* =========================================================
-   MOCK DOMAIN DATA
-   ========================================================= */
+const API_BASE_URL = "http://localhost:8080";
 
-const MOCK_DOMAINS = [
-  { id: 1, name: "Data Science" },
-  { id: 2, name: "Python Full Stack" },
-  { id: 3, name: "Mern Stack" },
-  { id: 4, name: "Data Analyst" },
-  { id: 5, name: "UI/UX" },
-  { id: 6, name: "DevOps" },
-  { id: 7, name: "Testing" },
-  { id: 8, name: "Java Full Stack" },
-  { id: 9, name: "Data Analyst" },
-];
-
-/* =========================================================
-   COMPONENT
-   ========================================================= */
+const INITIAL_FORM_DATA = {
+  employeeId: "",
+  fullName: "",
+  email: "",
+  phone: "",
+  dateOfBirth: "",
+  residentialAddressLine1: "",
+  residentialAddressLine2: "",
+  residentialCity: "",
+  residentialState: "",
+  residentialPincode: "",
+  permanentAddressLine1: "",
+  permanentAddressLine2: "",
+  permanentCity: "",
+  permanentState: "",
+  permanentPincode: "",
+  emergencyContactName: "",
+  emergencyContactPhone: "",
+  domain: "",
+  employmentType: "",
+  joiningDate: "",
+  status: "ACTIVE",
+};
 
 function AddEmployee() {
   const navigate = useNavigate();
 
-  /* Mock domains */
-  const domains = MOCK_DOMAINS;
-
-  /* =======================================================
-     FORM STATE
-     ======================================================= */
-
-  const [formData, setFormData] = useState({
-    employeeId: "",
-    fullName: "",
-    email: "",
-    phone: "",
-    dateOfBirth: "",
-    residentialAddress: "",
-    permanentAddress: "",
-    emergencyContactName: "",
-    emergencyContactPhone: "",
-    domain: "",
-    employmentType: "",
-    joiningDate: "",
-    status: "ACTIVE",
-  });
-
-  /* =======================================================
-     UI STATE
-     ======================================================= */
-
+  const [domains, setDomains] = useState([]);
+  const [domainsLoading, setDomainsLoading] = useState(true);
+  const [domainError, setDomainError] = useState("");
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [sameAsResidential, setSameAsResidential] = useState(false);
 
-  /* =======================================================
-     HANDLE INPUT CHANGE
-     ======================================================= */
+  const getAuthToken = () =>
+    localStorage.getItem("hirenestToken") ||
+    localStorage.getItem("token") ||
+    sessionStorage.getItem("hirenestToken") ||
+    sessionStorage.getItem("token");
 
+  // Fetch domains from the backend
+  useEffect(() => {
+    const fetchDomains = async () => {
+      setDomainsLoading(true);
+      setDomainError("");
+
+      const token = getAuthToken();
+
+      if (!token) {
+        setDomainError("Please log in again to load domains.");
+        setDomainsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/domains`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+        });
+
+        if (response.status === 401) {
+          throw new Error("Session expired. Please log in again.");
+        }
+
+        if (response.status === 403) {
+          throw new Error("You are not authorized to view domains.");
+        }
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to load domains. Status: ${response.status}`
+          );
+        }
+
+        const data = await response.json();
+
+        if (!Array.isArray(data)) {
+          throw new Error("Unexpected response from the domains API.");
+        }
+
+        const availableDomains = data.filter(
+          (domain) =>
+            domain &&
+            domain.name &&
+            (!domain.status ||
+              String(domain.status).toUpperCase() === "ACTIVE")
+        );
+
+        setDomains(availableDomains);
+      } catch (err) {
+        console.error("Fetch domains error:", err);
+        setDomainError(err.message || "Unable to load domains.");
+      } finally {
+        setDomainsLoading(false);
+      }
+    };
+
+    fetchDomains();
+  }, []);
+
+  // Handle input changes and synchronize addresses when checked
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value };
 
-    if (error) {
-      setError("");
-    }
-  };
+      if (sameAsResidential && name.startsWith("residential")) {
+        const field = name.replace("residential", "");
+        updated[`permanent${field}`] = value;
+      }
 
-  /* =======================================================
-     HANDLE SUBMIT
-     ======================================================= */
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+      return updated;
+    });
 
     setError("");
     setSuccess("");
+  };
 
-    /* =====================================================
-       VALIDATION
-       ===================================================== */
+  // Copy residential address to permanent address
+  const handleSameAsResidential = (e) => {
+    const checked = e.target.checked;
+    setSameAsResidential(checked);
+
+    if (checked) {
+      setFormData((prev) => ({
+        ...prev,
+        permanentAddressLine1: prev.residentialAddressLine1,
+        permanentAddressLine2: prev.residentialAddressLine2,
+        permanentCity: prev.residentialCity,
+        permanentState: prev.residentialState,
+        permanentPincode: prev.residentialPincode,
+      }));
+    }
+  };
+
+  // Combine individual address fields into a single backend-compatible string
+  const buildAddress = (line1, line2, city, state, pincode) =>
+    [line1, line2, city, state, pincode]
+      .map((part) => String(part || "").trim())
+      .filter(Boolean)
+      .join(", ");
+
+  // Submit employee details
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
 
     if (
       !formData.employeeId.trim() ||
@@ -118,188 +189,131 @@ function AddEmployee() {
       return;
     }
 
+    if (domainsLoading || domains.length === 0) {
+      setError("No available domains. Please check the Domain API.");
+      return;
+    }
+
     try {
       setLoading(true);
 
-      /* ===================================================
-         CREATE EMPLOYEE OBJECT
-         =================================================== */
+      const token = getAuthToken();
 
-      const newEmployee = {
-        id: Date.now(),
+      if (!token) {
+        setError("Authentication token not found. Please log in again.");
+        return;
+      }
 
+      const employeeData = {
         employeeId: formData.employeeId.trim(),
-
         fullName: formData.fullName.trim(),
-
         email: formData.email.trim(),
-
         phone: formData.phone.trim(),
-
-        dateOfBirth:
-          formData.dateOfBirth || null,
-
-        residentialAddress:
-          formData.residentialAddress.trim(),
-
-        permanentAddress:
-          formData.permanentAddress.trim(),
-
-        emergencyContactName:
-          formData.emergencyContactName.trim(),
-
-        emergencyContactPhone:
-          formData.emergencyContactPhone.trim(),
-
-        /* Backend-style field */
-        domainName: formData.domain.trim(),
-
-        employmentType:
-          formData.employmentType,
-
-        joiningDate:
-          formData.joiningDate,
-
-        status:
-          formData.status,
+        dateOfBirth: formData.dateOfBirth || null,
+        residentialAddress: buildAddress(
+          formData.residentialAddressLine1,
+          formData.residentialAddressLine2,
+          formData.residentialCity,
+          formData.residentialState,
+          formData.residentialPincode
+        ),
+        permanentAddress: buildAddress(
+          formData.permanentAddressLine1,
+          formData.permanentAddressLine2,
+          formData.permanentCity,
+          formData.permanentState,
+          formData.permanentPincode
+        ),
+        emergencyContactName: formData.emergencyContactName.trim(),
+        emergencyContactPhone: formData.emergencyContactPhone.trim(),
+        domainName: formData.domain,
+        employmentType: formData.employmentType,
+        joiningDate: formData.joiningDate,
+        status: formData.status,
       };
 
-      console.log(
-        "Creating MOCK employee:",
-        newEmployee
-      );
-
-      /* ===================================================
-         GET EXISTING MOCK EMPLOYEES
-         =================================================== */
-
-      const existingEmployees =
-        JSON.parse(
-          localStorage.getItem(
-            "mockEmployees"
-          )
-        ) || [];
-
-      /* ===================================================
-         CHECK DUPLICATE EMPLOYEE ID
-         =================================================== */
-
-      const duplicateEmployeeId =
-        existingEmployees.some(
-          (employee) =>
-            employee.employeeId.toLowerCase() ===
-            newEmployee.employeeId.toLowerCase()
-        );
-
-      if (duplicateEmployeeId) {
-        throw new Error(
-          "Employee ID already exists."
-        );
-      }
-
-      /* ===================================================
-         CHECK DUPLICATE EMAIL
-         =================================================== */
-
-      const duplicateEmail =
-        existingEmployees.some(
-          (employee) =>
-            employee.email.toLowerCase() ===
-            newEmployee.email.toLowerCase()
-        );
-
-      if (duplicateEmail) {
-        throw new Error(
-          "Employee email already exists."
-        );
-      }
-
-      /* ===================================================
-         SAVE MOCK EMPLOYEE
-         =================================================== */
-
-      const updatedEmployees = [
-        ...existingEmployees,
-        newEmployee,
-      ];
-
-      localStorage.setItem(
-        "mockEmployees",
-        JSON.stringify(updatedEmployees)
-      );
-
-      console.log(
-        "Mock employee saved successfully:",
-        newEmployee
-      );
-
-      /* ===================================================
-         SUCCESS MESSAGE
-         =================================================== */
-
-      setSuccess(
-        "Employee added successfully."
-      );
-
-      /* ===================================================
-         CLEAR FORM
-         =================================================== */
-
-      setFormData({
-        employeeId: "",
-        fullName: "",
-        email: "",
-        phone: "",
-        dateOfBirth: "",
-        residentialAddress: "",
-        permanentAddress: "",
-        emergencyContactName: "",
-        emergencyContactPhone: "",
-        domain: "",
-        employmentType: "",
-        joiningDate: "",
-        status: "ACTIVE",
+      const response = await fetch(`${API_BASE_URL}/api/employees`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(employeeData),
       });
 
-      /* ===================================================
-         REDIRECT
-         =================================================== */
+      const responseText = await response.text();
+
+      if (response.status === 401) {
+        setError("Session expired. Please log in again.");
+        return;
+      }
+
+      if (response.status === 403) {
+        setError("You are not authorized to add employees.");
+        return;
+      }
+
+      if (!response.ok) {
+        let errorMessage = "Unable to create employee.";
+
+        try {
+          const errorData = JSON.parse(responseText);
+          errorMessage =
+            errorData.message || errorData.error || errorMessage;
+        } catch {
+          if (responseText) errorMessage = responseText;
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      setSuccess("Employee added successfully!");
+      setFormData({ ...INITIAL_FORM_DATA });
+      setSameAsResidential(false);
 
       setTimeout(() => {
         navigate("/employees");
       }, 1200);
-
     } catch (err) {
-      console.error(
-        "Create employee error:",
-        err
-      );
-
+      console.error("Create employee error:", err);
       setError(
-        err.message ||
-          "Unable to create employee. Please try again."
+        err.message || "Unable to create employee. Please try again."
       );
     } finally {
       setLoading(false);
     }
   };
 
-  /* =======================================================
-     UI
-     ======================================================= */
+  const renderAddressField = (
+    id,
+    label,
+    placeholder,
+    value,
+    disabled = false,
+    fullWidth = false
+  ) => (
+    <div className={`form-group${fullWidth ? " full-width" : ""}`}>
+      <label htmlFor={id}>{label}</label>
+      <input
+        id={id}
+        type="text"
+        name={id}
+        value={value}
+        onChange={handleChange}
+        placeholder={placeholder}
+        disabled={disabled}
+        inputMode={id.toLowerCase().includes("pincode") ? "numeric" : undefined}
+        maxLength={id.toLowerCase().includes("pincode") ? 6 : undefined}
+      />
+    </div>
+  );
 
   return (
     <div className="add-employee-page">
-
       <div className="page-glow page-glow-one" />
       <div className="page-glow page-glow-two" />
 
-      {/* =================================================
-          HEADER
-          ================================================= */}
-
       <div className="add-employee-header">
-
         <button
           type="button"
           className="back-button"
@@ -310,96 +324,58 @@ function AddEmployee() {
         </button>
 
         <div className="page-heading">
-
           <div className="heading-icon">
             <UserPlus size={23} />
           </div>
 
           <div>
-
             <div className="eyebrow">
               <Sparkles size={13} />
               Employee Management
             </div>
-
             <h1>Add Employee</h1>
-
-            <p>
-              Create and register a new employee profile
-            </p>
-
+            <p>Create and register a new employee profile</p>
           </div>
-
         </div>
-
       </div>
 
-      {/* =================================================
-          MAIN CARD
-          ================================================= */}
-
       <div className="add-employee-card">
-
         <div className="form-topbar">
-
           <div>
-
-            <span className="topbar-label">
-              Employee Profile
-            </span>
-
+            <span className="topbar-label">Employee Profile</span>
             <span className="topbar-description">
               Complete the information below
             </span>
-
           </div>
 
           <div className="secure-badge">
             <ShieldCheck size={15} />
             Secure Form
           </div>
-
         </div>
 
         <form onSubmit={handleSubmit}>
-
-          {/* =================================================
-              EMPLOYEE INFORMATION
-              ================================================= */}
-
+          {/* EMPLOYEE INFORMATION */}
           <section className="form-section">
-
             <div className="section-title">
-
               <div className="section-icon">
                 <User size={18} />
               </div>
-
               <div>
                 <h2>Employee Information</h2>
-
-                <p>
-                  Enter the employee's basic information.
-                </p>
+                <p>Enter the employee's basic information.</p>
               </div>
-
             </div>
 
             <div className="form-grid">
-
-              {/* Employee ID */}
-
               <div className="form-group">
-
-                <label>
+                <label htmlFor="employeeId">
                   Employee ID <span>*</span>
                 </label>
-
                 <div className="input-wrapper">
-
                   <Briefcase size={17} />
-
                   <input
+                    id="employeeId"
                     type="text"
                     name="employeeId"
                     value={formData.employeeId}
@@ -407,24 +383,17 @@ function AddEmployee() {
                     placeholder="EMP001"
                     required
                   />
-
                 </div>
-
               </div>
 
-              {/* Full Name */}
-
               <div className="form-group">
-
-                <label>
+                <label htmlFor="fullName">
                   Full Name <span>*</span>
                 </label>
-
                 <div className="input-wrapper">
-
                   <User size={17} />
-
                   <input
+                    id="fullName"
                     type="text"
                     name="fullName"
                     value={formData.fullName}
@@ -432,24 +401,17 @@ function AddEmployee() {
                     placeholder="Enter full name"
                     required
                   />
-
                 </div>
-
               </div>
 
-              {/* Email */}
-
               <div className="form-group">
-
-                <label>
+                <label htmlFor="email">
                   Email <span>*</span>
                 </label>
-
                 <div className="input-wrapper">
-
                   <Mail size={17} />
-
                   <input
+                    id="email"
                     type="email"
                     name="email"
                     value={formData.email}
@@ -457,24 +419,17 @@ function AddEmployee() {
                     placeholder="employee@example.com"
                     required
                   />
-
                 </div>
-
               </div>
 
-              {/* Phone */}
-
               <div className="form-group">
-
-                <label>
+                <label htmlFor="phone">
                   Phone <span>*</span>
                 </label>
-
                 <div className="input-wrapper">
-
                   <Phone size={17} />
-
                   <input
+                    id="phone"
                     type="tel"
                     name="phone"
                     value={formData.phone}
@@ -482,405 +437,321 @@ function AddEmployee() {
                     placeholder="Enter phone number"
                     required
                   />
-
                 </div>
-
               </div>
 
-              {/* DOB */}
-
               <div className="form-group">
-
-                <label>
-                  Date of Birth
-                </label>
-
+                <label htmlFor="dateOfBirth">Date of Birth</label>
                 <div className="input-wrapper">
-
                   <Calendar size={17} />
-
                   <input
+                    id="dateOfBirth"
                     type="date"
                     name="dateOfBirth"
                     value={formData.dateOfBirth}
                     onChange={handleChange}
                   />
-
                 </div>
-
               </div>
 
-              {/* Joining Date */}
-
               <div className="form-group">
-
-                <label>
+                <label htmlFor="joiningDate">
                   Joining Date <span>*</span>
                 </label>
-
                 <div className="input-wrapper">
-
                   <Calendar size={17} />
-
                   <input
+                    id="joiningDate"
                     type="date"
                     name="joiningDate"
                     value={formData.joiningDate}
                     onChange={handleChange}
                     required
                   />
-
                 </div>
-
               </div>
-
             </div>
-
           </section>
 
-          {/* =================================================
-              EMPLOYMENT INFORMATION
-              ================================================= */}
-
+          {/* EMPLOYMENT INFORMATION */}
           <section className="form-section">
-
             <div className="section-title">
-
               <div className="section-icon">
                 <Building2 size={18} />
               </div>
-
               <div>
-
-                <h2>
-                  Employment Information
-                </h2>
-
-                <p>
-                  Configure the employee's role and employment details.
-                </p>
-
+                <h2>Employment Information</h2>
+                <p>Configure the employee's role and employment details.</p>
               </div>
-
             </div>
 
             <div className="form-grid">
-
-              {/* DOMAIN */}
-
               <div className="form-group">
-
                 <label htmlFor="domain">
                   Domain <span className="required">*</span>
                 </label>
-
                 <div className="input-wrapper select-wrapper">
-
                   <Building2 size={17} />
-
                   <select
                     id="domain"
                     name="domain"
                     value={formData.domain}
                     onChange={handleChange}
                     required
+                    disabled={domainsLoading || domains.length === 0}
                   >
-
                     <option value="">
-                      Select Domain
+                      {domainsLoading ? "Loading domains..." : "Select Domain"}
                     </option>
+
+                    {!domainsLoading && domains.length === 0 && (
+                      <option value="" disabled>
+                        No domains available
+                      </option>
+                    )}
 
                     {domains.map((domain) => (
                       <option
-                        key={domain.id}
+                        key={domain.id ?? domain.name}
                         value={domain.name}
                       >
                         {domain.name}
                       </option>
                     ))}
-
                   </select>
-
-                  <ChevronDown
-                    className="select-arrow"
-                    size={16}
-                  />
-
+                  <ChevronDown className="select-arrow" size={16} />
                 </div>
 
+                {domainError && (
+                  <div className="form-message error-message" role="alert">
+                    <AlertCircle size={17} />
+                    <span>{domainError}</span>
+                  </div>
+                )}
               </div>
 
-              {/* EMPLOYMENT TYPE */}
-
               <div className="form-group">
-
-                <label>
+                <label htmlFor="employmentType">
                   Employment Type <span>*</span>
                 </label>
-
                 <div className="input-wrapper select-wrapper">
-
                   <Briefcase size={17} />
-
                   <select
+                    id="employmentType"
                     name="employmentType"
                     value={formData.employmentType}
                     onChange={handleChange}
                     required
                   >
-
-                    <option value="">
-                      Select employment type
-                    </option>
-
-                    <option value="FULL_TIME">
-                      Full Time
-                    </option>
-
-                    <option value="PART_TIME">
-                      Part Time
-                    </option>
-
-                    <option value="INTERN">
-                      Intern
-                    </option>
-
-                    <option value="CONTRACT">
-                      Contract
-                    </option>
-
+                    <option value="">Select employment type</option>
+                    <option value="FULL_TIME">Full Time</option>
+                    <option value="PART_TIME">Part Time</option>
+                    <option value="INTERN">Intern</option>
+                    <option value="CONTRACT">Contract</option>
                   </select>
-
-                  <ChevronDown
-                    className="select-arrow"
-                    size={16}
-                  />
-
+                  <ChevronDown className="select-arrow" size={16} />
                 </div>
-
               </div>
 
-              {/* STATUS */}
-
               <div className="form-group">
-
-                <label>
-                  Status
-                </label>
-
+                <label htmlFor="status">Status</label>
                 <div className="input-wrapper select-wrapper">
-
                   <ShieldCheck size={17} />
-
                   <select
+                    id="status"
                     name="status"
                     value={formData.status}
                     onChange={handleChange}
                   >
-
-                    <option value="ACTIVE">
-                      Active
-                    </option>
-
-                    <option value="INACTIVE">
-                      Inactive
-                    </option>
-
-                 
-
+                    <option value="ACTIVE">Active</option>
+                    <option value="INACTIVE">Inactive</option>
                   </select>
-
-                  <ChevronDown
-                    className="select-arrow"
-                    size={16}
-                  />
-
+                  <ChevronDown className="select-arrow" size={16} />
                 </div>
-
               </div>
-
             </div>
-
           </section>
 
-          {/* =================================================
-              ADDRESS INFORMATION
-              ================================================= */}
-
+          {/* ADDRESS INFORMATION */}
           <section className="form-section">
-
             <div className="section-title">
-
               <div className="section-icon">
                 <MapPin size={18} />
               </div>
-
               <div>
-
-                <h2>
-                  Address Information
-                </h2>
-
-                <p>
-                  Enter residential and permanent address details.
-                </p>
-
+                <h2>Address Information</h2>
+                <p>Enter residential and permanent address details.</p>
               </div>
-
             </div>
 
-            <div className="form-grid">
+            {/* RESIDENTIAL ADDRESS */}
+            <div className="address-block">
+              <h3 className="address-subtitle">Residential Address</h3>
 
-              <div className="form-group full-width">
+              <div className="form-grid">
+                {renderAddressField(
+                  "residentialAddressLine1",
+                  "Address Line 1",
+                  "House/flat number, street name",
+                  formData.residentialAddressLine1,
+                  false,
+                  true
+                )}
 
-                <label>
-                  Residential Address
-                </label>
+                {renderAddressField(
+                  "residentialAddressLine2",
+                  "Address Line 2 (Optional)",
+                  "Area, landmark",
+                  formData.residentialAddressLine2,
+                  false,
+                  true
+                )}
 
-                <textarea
-                  name="residentialAddress"
-                  value={formData.residentialAddress}
-                  onChange={handleChange}
-                  placeholder="Enter residential address"
-                  rows="3"
-                />
+                {renderAddressField(
+                  "residentialCity",
+                  "City",
+                  "Enter city",
+                  formData.residentialCity
+                )}
 
+                {renderAddressField(
+                  "residentialState",
+                  "State",
+                  "Enter state",
+                  formData.residentialState
+                )}
+
+                {renderAddressField(
+                  "residentialPincode",
+                  "PIN Code",
+                  "6-digit PIN code",
+                  formData.residentialPincode
+                )}
               </div>
-
-              <div className="form-group full-width">
-
-                <label>
-                  Permanent Address
-                </label>
-
-                <textarea
-                  name="permanentAddress"
-                  value={formData.permanentAddress}
-                  onChange={handleChange}
-                  placeholder="Enter permanent address"
-                  rows="3"
-                />
-
-              </div>
-
             </div>
 
+            {/* PERMANENT ADDRESS */}
+            <div className="address-block permanent-address-block">
+              <h3 className="address-subtitle">Permanent Address</h3>
+
+              <label className="same-address-option">
+                <input
+                  type="checkbox"
+                  checked={sameAsResidential}
+                  onChange={handleSameAsResidential}
+                />
+                <span>Same as Residential Address</span>
+              </label>
+
+              <div className="form-grid">
+                {renderAddressField(
+                  "permanentAddressLine1",
+                  "Address Line 1",
+                  "House/flat number, street name",
+                  formData.permanentAddressLine1,
+                  sameAsResidential,
+                  true
+                )}
+
+                {renderAddressField(
+                  "permanentAddressLine2",
+                  "Address Line 2 (Optional)",
+                  "Area, landmark",
+                  formData.permanentAddressLine2,
+                  sameAsResidential,
+                  true
+                )}
+
+                {renderAddressField(
+                  "permanentCity",
+                  "City",
+                  "Enter city",
+                  formData.permanentCity,
+                  sameAsResidential
+                )}
+
+                {renderAddressField(
+                  "permanentState",
+                  "State",
+                  "Enter state",
+                  formData.permanentState,
+                  sameAsResidential
+                )}
+
+                {renderAddressField(
+                  "permanentPincode",
+                  "PIN Code",
+                  "6-digit PIN code",
+                  formData.permanentPincode,
+                  sameAsResidential
+                )}
+              </div>
+            </div>
           </section>
 
-          {/* =================================================
-              EMERGENCY CONTACT
-              ================================================= */}
-
+          {/* EMERGENCY CONTACT */}
           <section className="form-section">
-
             <div className="section-title">
-
               <div className="section-icon emergency-icon">
                 <Phone size={18} />
               </div>
-
               <div>
-
-                <h2>
-                  Emergency Contact
-                </h2>
-
-                <p>
-                  Provide emergency contact information.
-                </p>
-
+                <h2>Emergency Contact</h2>
+                <p>Provide emergency contact information.</p>
               </div>
-
             </div>
 
             <div className="form-grid">
-
               <div className="form-group">
-
-                <label>
-                  Contact Name
-                </label>
-
+                <label htmlFor="emergencyContactName">Contact Name</label>
                 <div className="input-wrapper">
-
                   <User size={17} />
-
                   <input
+                    id="emergencyContactName"
                     type="text"
                     name="emergencyContactName"
                     value={formData.emergencyContactName}
                     onChange={handleChange}
                     placeholder="Emergency contact name"
                   />
-
                 </div>
-
               </div>
 
               <div className="form-group">
-
-                <label>
-                  Contact Phone
-                </label>
-
+                <label htmlFor="emergencyContactPhone">Contact Phone</label>
                 <div className="input-wrapper">
-
                   <Phone size={17} />
-
                   <input
+                    id="emergencyContactPhone"
                     type="tel"
                     name="emergencyContactPhone"
                     value={formData.emergencyContactPhone}
                     onChange={handleChange}
                     placeholder="Emergency contact phone"
                   />
-
                 </div>
-
               </div>
-
             </div>
-
           </section>
 
-          {/* =================================================
-              ERROR
-              ================================================= */}
-
+          {/* ERROR MESSAGE */}
           {error && (
-            <div className="form-message error-message">
-
+            <div className="form-message error-message" role="alert">
               <AlertCircle size={17} />
-
-              <span>
-                {error}
-              </span>
-
+              <span>{error}</span>
             </div>
           )}
 
-          {/* =================================================
-              SUCCESS
-              ================================================= */}
-
+          {/* SUCCESS MESSAGE */}
           {success && (
-            <div className="form-message success-message">
-
+            <div className="form-message success-message" role="status">
               <CheckCircle2 size={17} />
-
-              <span>
-                {success}
-              </span>
-
+              <span>{success}</span>
             </div>
           )}
 
-          {/* =================================================
-              ACTIONS
-              ================================================= */}
-
+          {/* ACTION BUTTONS */}
           <div className="form-actions">
-
             <button
               type="button"
               className="cancel-button"
@@ -893,34 +764,23 @@ function AddEmployee() {
             <button
               type="submit"
               className="save-button"
-              disabled={loading}
+              disabled={loading || domainsLoading}
             >
-
               {loading ? (
                 <>
-                  <Loader2
-                    className="spinner"
-                    size={17}
-                  />
-
+                  <Loader2 className="spinner" size={17} />
                   Creating Employee...
                 </>
               ) : (
                 <>
                   <Save size={17} />
-
                   Add Employee
                 </>
               )}
-
             </button>
-
           </div>
-
         </form>
-
       </div>
-
     </div>
   );
 }
