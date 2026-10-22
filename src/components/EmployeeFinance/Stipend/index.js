@@ -1,340 +1,309 @@
-import React, { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ArrowLeft,
+  Users,
+  Wallet,
+  CheckCircle2,
   Search,
   Plus,
-  Download,
-  Eye,
   Pencil,
   Trash2,
   X,
-  GraduationCap,
-  Wallet,
-  Users,
-  CheckCircle2,
-  Clock,
   CalendarDays,
-  History,
+  Download,
+  RefreshCw,
 } from "lucide-react";
 import "./index.css";
 
-const initialStipends = [
-  {
-    id: 1,
-    employeeId: "HN-INT-001",
-    name: "Arun Kumar",
-    email: "arun@example.com",
-    stipend: 12000,
-    frequency: "Monthly",
-    startDate: "2026-01-01",
-    endDate: "2026-12-31",
-    status: "Active",
-  },
-  {
-    id: 2,
-    employeeId: "HN-INT-002",
-    name: "Priya Sharma",
-    email: "priya@example.com",
-    stipend: 10000,
-    frequency: "Monthly",
-    startDate: "2026-02-01",
-    endDate: "2026-07-31",
-    status: "Active",
-  },
-  {
-    id: 3,
-    employeeId: "HN-INT-003",
-    name: "Karthik Raj",
-    email: "karthik@example.com",
-    stipend: 8000,
-    frequency: "Monthly",
-    startDate: "2025-10-01",
-    endDate: "2026-03-31",
-    status: "Completed",
-  },
-  {
-    id: 4,
-    employeeId: "HN-INT-004",
-    name: "Divya S",
-    email: "divya@example.com",
-    stipend: 15000,
-    frequency: "Monthly",
-    startDate: "2026-04-01",
-    endDate: "2026-09-30",
-    status: "Pending",
-  },
-];
-
-const initialHistory = [
-  {
-    id: 1,
-    employeeId: "HN-INT-001",
-    name: "Arun Kumar",
-    amount: 12000,
-    period: "September 2026",
-    paymentDate: "2026-09-05",
-    status: "Paid",
-  },
-  {
-    id: 2,
-    employeeId: "HN-INT-002",
-    name: "Priya Sharma",
-    amount: 10000,
-    period: "September 2026",
-    paymentDate: "2026-09-05",
-    status: "Paid",
-  },
-  {
-    id: 3,
-    employeeId: "HN-INT-004",
-    name: "Divya S",
-    amount: 15000,
-    period: "September 2026",
-    paymentDate: "2026-09-10",
-    status: "Pending",
-  },
-  {
-    id: 4,
-    employeeId: "HN-INT-001",
-    name: "Arun Kumar",
-    amount: 12000,
-    period: "August 2026",
-    paymentDate: "2026-08-05",
-    status: "Paid",
-  },
-];
+const API_URL = "http://localhost:8080/api/internship";
 
 const emptyForm = {
   employeeId: "",
-  name: "",
-  email: "",
   stipend: "",
-  frequency: "Monthly",
+  frequency: "MONTHLY",
   startDate: "",
   endDate: "",
-  status: "Active",
 };
 
-const formatCurrency = (amount) =>
+const currency = (amount) =>
   new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }).format(Number(amount) || 0);
 
-const formatDate = (date) => {
-  if (!date) return "—";
 
-  return new Date(`${date}T00:00:00`).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
+function getToken() {
+  return (
+    localStorage.getItem("token") ||
+    localStorage.getItem("hirenestToken") ||
+    sessionStorage.getItem("token") ||
+    sessionStorage.getItem("hirenestToken") ||
+    localStorage.getItem("accessToken") ||
+    localStorage.getItem("jwtToken") ||
+    sessionStorage.getItem("accessToken") ||
+    sessionStorage.getItem("jwtToken") ||
+    ""
+  );
+}
+
+
+async function apiRequest(url, options = {}) {
+  const token = getToken();
+  console.log("JWT token found:", Boolean(token));
+
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
   });
-};
+
+  const responseText = await response.text();
+  let data = null;
+
+  if (responseText) {
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      data = responseText;
+    }
+  }
+
+  if (!response.ok) {
+    const message =
+      typeof data === "object" && data !== null
+        ? data.message || data.error || data.detail
+        : data;
+
+    throw new Error(
+      message || `Request failed with status ${response.status}`
+    );
+  }
+
+  return data;
+}
+
+function getRecordStatus(item) {
+  const today = new Date().toISOString().slice(0, 10);
+
+  if (item.endDate && item.endDate < today) return "Completed";
+  if (item.startDate && item.startDate > today) return "Upcoming";
+  return "Active";
+}
 
 export default function Stipend() {
-  const navigate = useNavigate();
-
-  const [stipends, setStipends] = useState(initialStipends);
-  const [history, setHistory] = useState(initialHistory);
-  const [activeTab, setActiveTab] = useState("list");
+  const [stipends, setStipends] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [frequencyFilter, setFrequencyFilter] = useState("All");
-  const [modal, setModal] = useState(null);
-  const [selectedStipend, setSelectedStipend] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [formError, setFormError] = useState("");
+  const [notice, setNotice] = useState("");
+
+  const loadStipends = useCallback(async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const data = await apiRequest(API_URL);
+      const records = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.content)
+          ? data.content
+          : Array.isArray(data?.data)
+            ? data.data
+            : [];
+
+      setStipends(records);
+    } catch (err) {
+      setError(
+        `${err.message}. Check that Spring Boot is running on port 8080 and that your login token is valid.`
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadStipends();
+  }, [loadStipends]);
+
+  const totals = useMemo(() => {
+    const total = stipends.reduce(
+      (sum, item) => sum + Number(item.stipend || 0),
+      0
+    );
+
+    return {
+      interns: stipends.length,
+      total,
+      active: stipends.filter(
+        (item) => getRecordStatus(item) === "Active"
+      ).length,
+      upcoming: stipends.filter(
+        (item) => getRecordStatus(item) === "Upcoming"
+      ).length,
+    };
+  }, [stipends]);
 
   const filteredStipends = useMemo(() => {
-    const query = search.toLowerCase().trim();
+    const term = search.trim().toLowerCase();
 
     return stipends.filter((item) => {
       const matchesSearch = [
-        item.name,
         item.employeeId,
-        item.email,
-      ].some((value) => value.toLowerCase().includes(query));
+        item.frequency,
+        item.startDate,
+        item.endDate,
+        item.id,
+      ].some((value) => String(value ?? "").toLowerCase().includes(term));
 
       const matchesStatus =
-        statusFilter === "All" || item.status === statusFilter;
-
-      const matchesFrequency =
-        frequencyFilter === "All" ||
-        item.frequency === frequencyFilter;
-
-      return matchesSearch && matchesStatus && matchesFrequency;
-    });
-  }, [stipends, search, statusFilter, frequencyFilter]);
-
-  const filteredHistory = useMemo(() => {
-    const query = search.toLowerCase().trim();
-
-    return history.filter((item) => {
-      const matchesSearch = [
-        item.name,
-        item.employeeId,
-        item.period,
-      ].some((value) => value.toLowerCase().includes(query));
-
-      const matchesStatus =
-        statusFilter === "All" || item.status === statusFilter;
+        statusFilter === "All" || getRecordStatus(item) === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
-  }, [history, search, statusFilter]);
+  }, [stipends, search, statusFilter]);
 
-  const activeCount = stipends.filter(
-    (item) => item.status === "Active"
-  ).length;
-
-  const totalMonthlyStipend = stipends
-    .filter((item) => item.status === "Active")
-    .reduce((total, item) => {
-      if (item.frequency === "Monthly") return total + Number(item.stipend);
-      if (item.frequency === "Weekly") {
-        return total + Number(item.stipend) * 4;
-      }
-      return total + Number(item.stipend) / 12;
-    }, 0);
-
-  const paidCount = history.filter(
-    (item) => item.status === "Paid"
-  ).length;
-
-  const openAddModal = () => {
-    setForm(emptyForm);
-    setError("");
-    setSelectedStipend(null);
-    setModal("add");
-  };
-
-  const openEditModal = (item) => {
-    setForm({
-      employeeId: item.employeeId,
-      name: item.name,
-      email: item.email,
-      stipend: String(item.stipend),
-      frequency: item.frequency,
-      startDate: item.startDate,
-      endDate: item.endDate,
-      status: item.status,
-    });
-    setError("");
-    setSelectedStipend(item);
-    setModal("edit");
-  };
-
-  const updateForm = (event) => {
+  const updateField = (event) => {
     const { name, value } = event.target;
     setForm((previous) => ({ ...previous, [name]: value }));
   };
 
-  const saveStipend = (event) => {
+  const openAddForm = () => {
+    setEditingId(null);
+    setForm({ ...emptyForm });
+    setFormError("");
+    setNotice("");
+    setShowForm(true);
+  };
+
+  const openEditForm = (item) => {
+    setEditingId(item.id);
+    setForm({
+      employeeId: String(item.employeeId ?? ""),
+      stipend: String(item.stipend ?? ""),
+      frequency: item.frequency || "MONTHLY",
+      startDate: item.startDate || "",
+      endDate: item.endDate || "",
+    });
+    setFormError("");
+    setNotice("");
+    setShowForm(true);
+  };
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    setError("");
+    setFormError("");
+    setNotice("");
 
-    if (form.endDate < form.startDate) {
-      setError("End date must be on or after the start date.");
-      return;
-    }
+    
+const employeeId = form.employeeId.trim();
+const stipend = Number(form.stipend);
 
-    const stipendAmount = Number(form.stipend);
+if (!employeeId) {
+  setFormError("Please enter a valid employee ID.");
+  return;
+}
 
-    if (!Number.isFinite(stipendAmount) || stipendAmount <= 0) {
-      setError("Enter a valid stipend amount greater than zero.");
-      return;
-    }
+if (!Number.isFinite(stipend) || stipend <= 0) {
+  setFormError("Stipend must be greater than zero.");
+  return;
+}
 
-    const record = {
-      ...form,
-      stipend: stipendAmount,
-    };
+const payload = {
+  employeeId,
+  stipend,
+  frequency: form.frequency,
+  startDate: form.startDate,
+  endDate: form.endDate,
+};
 
-    if (modal === "edit" && selectedStipend) {
-      setStipends((previous) =>
-        previous.map((item) =>
-          item.id === selectedStipend.id
-            ? { ...record, id: selectedStipend.id }
-            : item
-        )
+
+    setSaving(true);
+
+    try {
+      const url =
+        editingId !== null
+          ? `${API_URL}/${encodeURIComponent(editingId)}`
+          : API_URL;
+
+      await apiRequest(url, {
+        method: editingId !== null ? "PUT" : "POST",
+        body: JSON.stringify(payload),
+      });
+
+      setShowForm(false);
+      setEditingId(null);
+      setForm({ ...emptyForm });
+      setNotice(
+        editingId !== null
+          ? "Stipend record updated successfully."
+          : "Stipend record added successfully."
       );
-    } else {
-      setStipends((previous) => [
-        { ...record, id: Date.now() },
-        ...previous,
-      ]);
+
+      await loadStipends();
+    } catch (err) {
+      setFormError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteStipend = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this stipend record?")) {
+      return;
     }
 
-    setModal(null);
-    setForm(emptyForm);
+    setError("");
+    setNotice("");
+
+    try {
+      await apiRequest(`${API_URL}/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+
+      setNotice("Stipend record deleted successfully.");
+      await loadStipends();
+    } catch (err) {
+      setError(`Unable to delete stipend record: ${err.message}`);
+    }
   };
 
-  const deleteStipend = (item) => {
-    const confirmed = window.confirm(
-      `Delete the stipend record for ${item.name}?`
-    );
+  const exportCsv = () => {
+    const headers = [
+      "Record ID",
+      "Employee Database ID",
+      "Stipend",
+      "Frequency",
+      "Start Date",
+      "End Date",
+      "Status",
+    ];
 
-    if (!confirmed) return;
+    const rows = filteredStipends.map((item) => [
+      item.id,
+      item.employeeId,
+      item.stipend,
+      item.frequency,
+      item.startDate,
+      item.endDate,
+      getRecordStatus(item),
+    ]);
 
-    setStipends((previous) =>
-      previous.filter((record) => record.id !== item.id)
-    );
-  };
-
-  const exportCSV = () => {
-    const rows =
-      activeTab === "list" ? filteredStipends : filteredHistory;
-
-    const headers =
-      activeTab === "list"
-        ? [
-            "Employee ID",
-            "Name",
-            "Email",
-            "Stipend",
-            "Frequency",
-            "Start Date",
-            "End Date",
-            "Status",
-          ]
-        : [
-            "Employee ID",
-            "Name",
-            "Amount",
-            "Period",
-            "Payment Date",
-            "Status",
-          ];
-
-    const values =
-      activeTab === "list"
-        ? rows.map((item) => [
-            item.employeeId,
-            item.name,
-            item.email,
-            item.stipend,
-            item.frequency,
-            item.startDate,
-            item.endDate,
-            item.status,
-          ])
-        : rows.map((item) => [
-            item.employeeId,
-            item.name,
-            item.amount,
-            item.period,
-            item.paymentDate,
-            item.status,
-          ]);
-
-    const escapeCSV = (value) =>
+    const escapeCsv = (value) =>
       `"${String(value ?? "").replace(/"/g, '""')}"`;
 
-    const csv = [headers, ...values]
-      .map((row) => row.map(escapeCSV).join(","))
-      .join("\n");
+    const csv = [headers, ...rows]
+      .map((row) => row.map(escapeCsv).join(","))
+      .join("\r\n");
 
     const blob = new Blob(["\uFEFF" + csv], {
       type: "text/csv;charset=utf-8;",
@@ -343,599 +312,402 @@ export default function Stipend() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download =
-      activeTab === "list" ? "stipend-list.csv" : "stipend-history.csv";
+    link.download = "stipend-records.csv";
     link.click();
     URL.revokeObjectURL(url);
   };
 
-  const closeModal = () => {
-    setModal(null);
-    setError("");
-    setSelectedStipend(null);
-  };
-
   return (
     <div className="stipend-page">
-      <button
-        type="button"
-        className="stipend-back-button"
-        onClick={() => navigate("/employee-finance")}
-      >
-        <ArrowLeft size={17} />
-        <span>Back to Employee Finance</span>
-      </button>
-
-      <header className="stipend-page-header">
-        <div className="stipend-title-icon">
-          <GraduationCap size={25} />
-        </div>
-
+      <div className="stipend-header">
         <div>
-          <p className="stipend-eyebrow">EMPLOYEE FINANCE / STIPEND</p>
+          <div className="stipend-breadcrumb">Finance / Stipend</div>
           <h1>Stipend Management</h1>
-          <p>
-            Manage intern stipend details, payment schedules, and payment
-            history.
-          </p>
+          <p>Manage intern stipend amounts and internship periods.</p>
         </div>
-      </header>
 
-      <section className="stipend-summary-grid">
-        <article className="stipend-summary-card">
-          <div className="stipend-summary-icon">
-            <Users size={21} />
-          </div>
-          <div>
-            <span>Total Intern Records</span>
-            <h3>{stipends.length}</h3>
-          </div>
-        </article>
-
-        <article className="stipend-summary-card">
-          <div className="stipend-summary-icon">
-            <CheckCircle2 size={21} />
-          </div>
-          <div>
-            <span>Active Interns</span>
-            <h3>{activeCount}</h3>
-          </div>
-        </article>
-
-        <article className="stipend-summary-card">
-          <div className="stipend-summary-icon">
-            <Wallet size={21} />
-          </div>
-          <div>
-            <span>Estimated Monthly Stipend</span>
-            <h3>{formatCurrency(totalMonthlyStipend)}</h3>
-          </div>
-        </article>
-
-        <article className="stipend-summary-card">
-          <div className="stipend-summary-icon">
-            <History size={21} />
-          </div>
-          <div>
-            <span>Paid History Records</span>
-            <h3>{paidCount}</h3>
-          </div>
-        </article>
-      </section>
-
-      <section className="stipend-content-card">
-        <div className="stipend-content-header">
-          <div>
-            <h2>Intern Stipends</h2>
-            <p>View and manage intern stipend information.</p>
-          </div>
-
+        <div className="stipend-header-actions">
           <button
             type="button"
-            className="stipend-primary-button"
-            onClick={openAddModal}
+            className="stipend-btn stipend-btn-outline"
+            onClick={exportCsv}
           >
-            <Plus size={17} />
+            <Download size={17} />
+            Export CSV
+          </button>
+          <button
+            type="button"
+            className="stipend-btn stipend-btn-primary"
+            onClick={openAddForm}
+          >
+            <Plus size={18} />
             Add Stipend
           </button>
         </div>
+      </div>
 
-        <div className="stipend-tabs">
-          <button
-            type="button"
-            className={activeTab === "list" ? "active" : ""}
-            onClick={() => {
-              setActiveTab("list");
-              setStatusFilter("All");
-            }}
-          >
-            <Wallet size={16} />
-            Stipend List
+      {error && (
+        <div className="stipend-alert stipend-alert-error" role="alert">
+          <span>{error}</span>
+          <button type="button" onClick={loadStipends}>
+            <RefreshCw size={15} /> Retry
           </button>
+        </div>
+      )}
 
+      {notice && (
+        <div className="stipend-alert stipend-alert-success" role="status">
+          {notice}
+          <button type="button" onClick={() => setNotice("")}>
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
+      <div className="stipend-summary-grid">
+        <SummaryCard
+          title="Stipend Records"
+          value={totals.interns}
+          icon={<Users size={21} />}
+          detail="Records from backend"
+          color="blue"
+        />
+        <SummaryCard
+          title="Total Stipend"
+          value={currency(totals.total)}
+          icon={<Wallet size={21} />}
+          detail="Sum of listed stipend amounts"
+          color="purple"
+        />
+        <SummaryCard
+          title="Active Records"
+          value={totals.active}
+          icon={<CheckCircle2 size={21} />}
+          detail="Within the stipend period"
+          color="green"
+        />
+        <SummaryCard
+          title="Upcoming Records"
+          value={totals.upcoming}
+          icon={<CalendarDays size={21} />}
+          detail="Periods starting later"
+          color="orange"
+        />
+      </div>
+
+      <div className="stipend-table-card">
+        <div className="stipend-table-heading">
+          <div>
+            <h2>Stipend Records</h2>
+            <p>Data loaded from the HIRENEST backend.</p>
+          </div>
           <button
             type="button"
-            className={activeTab === "history" ? "active" : ""}
-            onClick={() => {
-              setActiveTab("history");
-              setStatusFilter("All");
-            }}
+            className="stipend-icon-btn"
+            title="Refresh records"
+            aria-label="Refresh records"
+            onClick={loadStipends}
+            disabled={loading}
           >
-            <History size={16} />
-            Stipend History
+            <RefreshCw size={16} />
           </button>
         </div>
 
         <div className="stipend-toolbar">
           <div className="stipend-search">
-            <Search size={17} />
+            <Search size={18} />
             <input
-              type="search"
+              type="text"
+              placeholder="Search employee ID, frequency, dates..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search name or employee ID..."
             />
+            {search && (
+              <button
+                type="button"
+                className="stipend-clear-search"
+                aria-label="Clear search"
+                onClick={() => setSearch("")}
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
 
           <select
-            aria-label="Filter by status"
+            className="stipend-filter"
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
+            aria-label="Filter by record status"
           >
-            <option value="All">All Statuses</option>
-            {(
-              activeTab === "list"
-                ? ["Active", "Pending", "Completed"]
-                : ["Paid", "Pending"]
-            ).map((status) => (
-              <option value={status} key={status}>
-                {status}
-              </option>
-            ))}
+            <option value="All">All statuses</option>
+            <option value="Active">Active</option>
+            <option value="Upcoming">Upcoming</option>
+            <option value="Completed">Completed</option>
           </select>
-
-          {activeTab === "list" && (
-            <select
-              aria-label="Filter by frequency"
-              value={frequencyFilter}
-              onChange={(event) => setFrequencyFilter(event.target.value)}
-            >
-              <option value="All">All Frequencies</option>
-              <option value="Monthly">Monthly</option>
-              <option value="Weekly">Weekly</option>
-              <option value="Yearly">Yearly</option>
-            </select>
-          )}
-
-          <button
-            type="button"
-            className="stipend-export-button"
-            onClick={exportCSV}
-          >
-            <Download size={16} />
-            Export CSV
-          </button>
         </div>
 
-        {activeTab === "list" ? (
-          <div className="stipend-table-wrapper">
-            <table className="stipend-table">
-              <thead>
+        <div className="stipend-table-wrapper">
+          <table className="stipend-table">
+            <thead>
+              <tr>
+                <th>Employee ID</th>
+                <th>Stipend Amount</th>
+                <th>Frequency</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Period Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
                 <tr>
-                  <th>Intern</th>
-                  <th>Stipend</th>
-                  <th>Frequency</th>
-                  <th>Duration</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                  <td colSpan="7">
+                    <div className="stipend-empty">Loading stipend records...</div>
+                  </td>
                 </tr>
-              </thead>
+              ) : filteredStipends.length === 0 ? (
+                <tr>
+                  <td colSpan="7">
+                    <div className="stipend-empty">
+                      <Wallet size={34} />
+                      <strong>No stipend records found</strong>
+                      <span>
+                        Add a record or try changing your search filters.
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredStipends.map((item) => {
+                  const status = getRecordStatus(item);
 
-              <tbody>
-                {filteredStipends.map((item) => (
-                  <tr key={item.id}>
-                    <td>
-                      <div className="stipend-employee-cell">
-                        <div className="stipend-avatar">
-                          {item.name.charAt(0).toUpperCase()}
+                  return (
+                    <tr key={item.id}>
+                      <td>
+                        <div className="stipend-person">
+                          <div className="stipend-avatar">
+                            {String(item.employeeId ?? "?").slice(0, 2)}
+                          </div>
+                          <div>
+                            <strong>Employee #{item.employeeId}</strong>
+                            <span>Record ID: {item.id}</span>
+                          </div>
                         </div>
-                        <div>
-                          <strong>{item.name}</strong>
-                          <span>{item.employeeId}</span>
-                          <small>{item.email}</small>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td>
-                      <strong className="stipend-amount">
-                        {formatCurrency(item.stipend)}
-                      </strong>
-                    </td>
-
-                    <td>{item.frequency}</td>
-
-                    <td>
-                      <div className="stipend-duration">
-                        <span>
-                          <CalendarDays size={13} />
-                          {formatDate(item.startDate)}
+                      </td>
+                      <td className="stipend-money">
+                        {currency(item.stipend)}
+                      </td>
+                      <td>{item.frequency || "—"}</td>
+                      <td>
+                        <span className="stipend-date">
+                          <CalendarDays size={14} />
+                          {item.startDate || "—"}
                         </span>
-                        <span>to {formatDate(item.endDate)}</span>
-                      </div>
-                    </td>
-
-                    <td>
-                      <span
-                        className={`stipend-status ${item.status.toLowerCase()}`}
-                      >
-                        {item.status}
-                      </span>
-                    </td>
-
-                    <td>
-                      <div className="stipend-row-actions">
-                        <button
-                          type="button"
-                          title="View"
-                          aria-label={`View ${item.name}`}
-                          onClick={() => {
-                            setSelectedStipend(item);
-                            setModal("view");
-                          }}
+                      </td>
+                      <td>
+                        <span className="stipend-date">
+                          <CalendarDays size={14} />
+                          {item.endDate || "—"}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          className={`stipend-status status-${status.toLowerCase()}`}
                         >
-                          <Eye size={16} />
-                        </button>
-
-                        <button
-                          type="button"
-                          title="Edit"
-                          aria-label={`Edit ${item.name}`}
-                          onClick={() => openEditModal(item)}
-                        >
-                          <Pencil size={16} />
-                        </button>
-
-                        <button
-                          type="button"
-                          title="Delete"
-                          aria-label={`Delete ${item.name}`}
-                          className="delete"
-                          onClick={() => deleteStipend(item)}
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-
-                {filteredStipends.length === 0 && (
-                  <tr>
-                    <td colSpan="6" className="stipend-empty">
-                      No stipend records found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="stipend-table-wrapper">
-            <table className="stipend-table">
-              <thead>
-                <tr>
-                  <th>Intern</th>
-                  <th>Payment Period</th>
-                  <th>Amount</th>
-                  <th>Payment Date</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {filteredHistory.map((item) => (
-                  <tr key={item.id}>
-                    <td>
-                      <div className="stipend-employee-cell">
-                        <div className="stipend-avatar">
-                          {item.name.charAt(0).toUpperCase()}
+                          <span />
+                          {status}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="stipend-row-actions">
+                          <button
+                            type="button"
+                            className="stipend-icon-btn"
+                            title="Edit stipend"
+                            aria-label={`Edit stipend record ${item.id}`}
+                            onClick={() => openEditForm(item)}
+                          >
+                            <Pencil size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            className="stipend-icon-btn stipend-delete-btn"
+                            title="Delete stipend"
+                            aria-label={`Delete stipend record ${item.id}`}
+                            onClick={() => deleteStipend(item.id)}
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
-                        <div>
-                          <strong>{item.name}</strong>
-                          <span>{item.employeeId}</span>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td>{item.period}</td>
-                    <td>
-                      <strong className="stipend-amount">
-                        {formatCurrency(item.amount)}
-                      </strong>
-                    </td>
-                    <td>{formatDate(item.paymentDate)}</td>
-                    <td>
-                      <span
-                        className={`stipend-status ${item.status.toLowerCase()}`}
-                      >
-                        {item.status}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="stipend-history-view"
-                        onClick={() => {
-                          setSelectedStipend(item);
-                          setModal("historyView");
-                        }}
-                      >
-                        <Eye size={15} />
-                        View
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-
-                {filteredHistory.length === 0 && (
-                  <tr>
-                    <td colSpan="6" className="stipend-empty">
-                      No stipend history found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
 
         <div className="stipend-table-footer">
-          Showing{" "}
-          {activeTab === "list"
-            ? filteredStipends.length
-            : filteredHistory.length}{" "}
-          records
-          <span>Demo data · Not connected to the backend</span>
+          <span>
+            Showing {filteredStipends.length} of {stipends.length} records
+          </span>
+          <span>Amounts displayed in INR (₹)</span>
         </div>
-      </section>
+      </div>
 
-      {modal && (
-        <div className="stipend-modal-overlay" onClick={closeModal}>
+      {showForm && (
+        <div
+          className="stipend-modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !saving) {
+              setShowForm(false);
+            }
+          }}
+        >
           <div
             className="stipend-modal"
-            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="stipend-modal-title"
           >
             <div className="stipend-modal-header">
               <div>
-                <h2>
-                  {modal === "add" && "Add Stipend"}
-                  {modal === "edit" && "Edit Stipend"}
-                  {modal === "view" && "Stipend Details"}
-                  {modal === "historyView" && "Payment Details"}
+                <h2 id="stipend-modal-title">
+                  {editingId !== null ? "Edit Stipend" : "Add Stipend"}
                 </h2>
-                <p>
-                  {modal === "view" || modal === "historyView"
-                    ? "Review the selected record."
-                    : "Enter the intern's stipend information."}
-                </p>
+                <p>Enter the employee ID and stipend period.</p>
               </div>
-
               <button
                 type="button"
-                className="stipend-modal-close"
-                onClick={closeModal}
-                aria-label="Close dialog"
+                className="stipend-icon-btn"
+                aria-label="Close form"
+                disabled={saving}
+                onClick={() => setShowForm(false)}
               >
                 <X size={20} />
               </button>
             </div>
 
-            {modal === "view" && selectedStipend && (
-              <div className="stipend-details-grid">
-                <div>
-                  <span>Intern Name</span>
-                  <strong>{selectedStipend.name}</strong>
-                </div>
-                <div>
-                  <span>Employee ID</span>
-                  <strong>{selectedStipend.employeeId}</strong>
-                </div>
-                <div>
-                  <span>Email</span>
-                  <strong>{selectedStipend.email}</strong>
-                </div>
-                <div>
-                  <span>Stipend Amount</span>
-                  <strong>{formatCurrency(selectedStipend.stipend)}</strong>
-                </div>
-                <div>
-                  <span>Frequency</span>
-                  <strong>{selectedStipend.frequency}</strong>
-                </div>
-                <div>
-                  <span>Status</span>
-                  <strong>{selectedStipend.status}</strong>
-                </div>
-                <div>
-                  <span>Start Date</span>
-                  <strong>{formatDate(selectedStipend.startDate)}</strong>
-                </div>
-                <div>
-                  <span>End Date</span>
-                  <strong>{formatDate(selectedStipend.endDate)}</strong>
-                </div>
-              </div>
-            )}
+            <form onSubmit={handleSubmit}>
+              <div className="stipend-form-grid">
+                <label className="stipend-full-width">
+                  Employee Database ID *
+                  
+<input
+  type="text"
+  name="employeeId"
+  value={form.employeeId}
+  onChange={updateField}
+  placeholder="Enter employee ID, e.g. EMP001"
+  required
+/>
 
-            {modal === "historyView" && selectedStipend && (
-              <div className="stipend-details-grid">
-                <div>
-                  <span>Intern Name</span>
-                  <strong>{selectedStipend.name}</strong>
-                </div>
-                <div>
-                  <span>Employee ID</span>
-                  <strong>{selectedStipend.employeeId}</strong>
-                </div>
-                <div>
-                  <span>Payment Period</span>
-                  <strong>{selectedStipend.period}</strong>
-                </div>
-                <div>
-                  <span>Payment Amount</span>
-                  <strong>{formatCurrency(selectedStipend.amount)}</strong>
-                </div>
-                <div>
-                  <span>Payment Date</span>
-                  <strong>{formatDate(selectedStipend.paymentDate)}</strong>
-                </div>
-                <div>
-                  <span>Payment Status</span>
-                  <strong>{selectedStipend.status}</strong>
-                </div>
-              </div>
-            )}
+                  <span className="stipend-field-help">
+                    Use the employee's database ID, not an employee code.
+                  </span>
+                </label>
 
-            {(modal === "add" || modal === "edit") && (
-              <form className="stipend-form" onSubmit={saveStipend}>
-                <div className="stipend-form-grid">
-                  <label>
-                    Intern Name *
-                    <input
-                      name="name"
-                      value={form.name}
-                      onChange={updateForm}
-                      placeholder="Enter intern name"
-                      required
-                    />
-                  </label>
+                <label>
+                  Stipend Amount (₹) *
+                  <input
+                    type="number"
+                    name="stipend"
+                    min="0.01"
+                    step="0.01"
+                    value={form.stipend}
+                    onChange={updateField}
+                    placeholder="Enter stipend amount"
+                    required
+                  />
+                </label>
 
-                  <label>
-                    Employee ID *
-                    <input
-                      name="employeeId"
-                      value={form.employeeId}
-                      onChange={updateForm}
-                      placeholder="e.g. HN-INT-005"
-                      required
-                    />
-                  </label>
-
-                  <label className="full-width">
-                    Email Address *
-                    <input
-                      name="email"
-                      type="email"
-                      value={form.email}
-                      onChange={updateForm}
-                      placeholder="intern@example.com"
-                      required
-                    />
-                  </label>
-
-                  <label>
-                    Stipend Amount (₹) *
-                    <input
-                      name="stipend"
-                      type="number"
-                      min="1"
-                      step="1"
-                      value={form.stipend}
-                      onChange={updateForm}
-                      placeholder="Enter amount"
-                      required
-                    />
-                  </label>
-
-                  <label>
-                    Frequency *
-                    <select
-                      name="frequency"
-                      value={form.frequency}
-                      onChange={updateForm}
-                      required
-                    >
-                      <option value="Monthly">Monthly</option>
-                      <option value="Weekly">Weekly</option>
-                      <option value="Yearly">Yearly</option>
-                    </select>
-                  </label>
-
-                  <label>
-                    Start Date *
-                    <input
-                      name="startDate"
-                      type="date"
-                      value={form.startDate}
-                      onChange={updateForm}
-                      required
-                    />
-                  </label>
-
-                  <label>
-                    End Date *
-                    <input
-                      name="endDate"
-                      type="date"
-                      min={form.startDate || undefined}
-                      value={form.endDate}
-                      onChange={updateForm}
-                      required
-                    />
-                  </label>
-
-                  <label className="full-width">
-                    Status *
-                    <select
-                      name="status"
-                      value={form.status}
-                      onChange={updateForm}
-                      required
-                    >
-                      <option value="Active">Active</option>
-                      <option value="Pending">Pending</option>
-                      <option value="Completed">Completed</option>
-                    </select>
-                  </label>
-                </div>
-
-                {error && <p className="stipend-form-error">{error}</p>}
-
-                <div className="stipend-modal-actions">
-                  <button
-                    type="button"
-                    className="stipend-cancel-button"
-                    onClick={closeModal}
+                <label>
+                  Frequency *
+                  <select
+                    name="frequency"
+                    value={form.frequency}
+                    onChange={updateField}
+                    required
                   >
-                    Cancel
-                  </button>
+                    <option value="MONTHLY">Monthly</option>
+                    <option value="WEEKLY">Weekly</option>
+                    <option value="DAILY">Daily</option>
+                    <option value="YEARLY">Yearly</option>
+                    <option value="ONE_TIME">One-time</option>
+                  </select>
+                </label>
 
-                  <button
-                    type="submit"
-                    className="stipend-primary-button"
-                  >
-                    {modal === "edit" ? "Save Changes" : "Add Stipend"}
-                  </button>
-                </div>
-              </form>
-            )}
+                <label>
+                  Start Date *
+                  <input
+                    type="date"
+                    name="startDate"
+                    value={form.startDate}
+                    onChange={updateField}
+                    required
+                  />
+                </label>
 
-            {(modal === "view" || modal === "historyView") && (
+                <label>
+                  End Date *
+                  <input
+                    type="date"
+                    name="endDate"
+                    value={form.endDate}
+                    onChange={updateField}
+                    min={form.startDate || undefined}
+                    required
+                  />
+                </label>
+              </div>
+
+              {formError && (
+                <p className="stipend-form-error" role="alert">
+                  {formError}
+                </p>
+              )}
+
               <div className="stipend-modal-actions">
                 <button
                   type="button"
-                  className="stipend-cancel-button"
-                  onClick={closeModal}
+                  className="stipend-btn stipend-btn-outline"
+                  disabled={saving}
+                  onClick={() => setShowForm(false)}
                 >
-                  Close
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="stipend-btn stipend-btn-primary"
+                  disabled={saving}
+                >
+                  {saving
+                    ? "Saving..."
+                    : editingId !== null
+                      ? "Save Changes"
+                      : "Add Stipend"}
                 </button>
               </div>
-            )}
+            </form>
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function SummaryCard({ title, value, icon, detail, color }) {
+  return (
+    <div className="stipend-summary-card">
+      <div className="stipend-summary-top">
+        <span>{title}</span>
+        <div className={`stipend-summary-icon ${color}`}>{icon}</div>
+      </div>
+      <strong className="stipend-summary-value">{value}</strong>
+      <span className="stipend-summary-detail">{detail}</span>
     </div>
   );
 }
